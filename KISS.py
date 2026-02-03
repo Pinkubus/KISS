@@ -2008,6 +2008,7 @@ class SpreederApp:
         result_win.geometry("700x600")
         result_win.configure(fg_color="#1a1a1a")
         result_win.transient(self.window)
+        result_win.attributes("-topmost", True)
         result_win.lift()
         
         # Bind Escape to close
@@ -2443,6 +2444,7 @@ class SpreederApp:
         shortcuts_win.geometry("400x580")
         shortcuts_win.configure(fg_color="#1a1a1a")
         shortcuts_win.transient(self.window)  # Make it appear on top of parent
+        shortcuts_win.attributes("-topmost", True)
         shortcuts_win.lift()  # Bring to front
         
         # Center the window
@@ -2672,6 +2674,7 @@ Space / Enter       Close and hide window
         clarify_win.geometry("450x180")
         clarify_win.configure(fg_color="#1a1a1a")
         clarify_win.transient(self.window)
+        clarify_win.attributes("-topmost", True)
         clarify_win.lift()
         
         # Center the window
@@ -2782,6 +2785,7 @@ Space / Enter       Close and hide window
         loading_win.geometry("300x100")
         loading_win.configure(fg_color="#1a1a1a")
         loading_win.transient(self.window)
+        loading_win.attributes("-topmost", True)
         
         # Bind Escape to close
         loading_win.bind("<Escape>", lambda e: loading_win.destroy())
@@ -2909,6 +2913,7 @@ Please clarify this for me in a way that helps me truly understand."""
         response_win.geometry("550x500")
         response_win.configure(fg_color="#1a1a1a")
         response_win.transient(self.window)
+        response_win.attributes("-topmost", True)
         response_win.lift()
         
         # Center the window
@@ -3404,7 +3409,7 @@ Please clarify this for me in a way that helps me truly understand."""
         
         # Window dimensions
         window_width = 600
-        window_height = 450  # Slightly taller to accommodate progress bar
+        window_height = 520  # Taller to accommodate both sliders and progress bar
         
         # Get screen dimensions and calculate center position
         screen_width = self.window.winfo_screenwidth()
@@ -4220,6 +4225,7 @@ Please clarify this for me in a way that helps me truly understand."""
         qq_window.geometry("550x320")
         qq_window.configure(fg_color="#1a1a1a")
         qq_window.transient(self.window)
+        qq_window.attributes("-topmost", True)
         qq_window.lift()
         
         # Clear sentinel after window is created
@@ -4821,6 +4827,7 @@ Please clarify this for me in a way that helps me truly understand."""
         answer_win.geometry("600x500")
         answer_win.configure(fg_color="#1a1a1a")
         answer_win.transient(self.window)
+        answer_win.attributes("-topmost", True)
         answer_win.lift()
         
         # Bind Escape to close
@@ -4979,6 +4986,7 @@ Please clarify this for me in a way that helps me truly understand."""
         followup_win.geometry("500x200")
         followup_win.configure(fg_color="#1a1a1a")
         followup_win.transient(self.window)
+        followup_win.attributes("-topmost", True)
         followup_win.lift()
         
         # Bind Escape to close
@@ -6634,7 +6642,14 @@ Generate questions that test understanding, not just recall. Make them challengi
         Calculate a time multiplier based on word length.
         Short words (1-3 chars) display faster, long words (8+) display longer.
         Returns a multiplier centered around 1.0
+        
+        Exception: Words ending with sentence-ending punctuation (. ! ?) always return 1.0
+        to ensure the full pause delay is applied.
         """
+        # Words ending with sentence-ending punctuation should use full timing
+        if word and word[-1] in '.!?':
+            return 1.0
+        
         # Get word length (strip punctuation for accurate count)
         clean_word = ''.join(c for c in word if c.isalnum())
         length = len(clean_word)
