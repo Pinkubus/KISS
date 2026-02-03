@@ -4555,7 +4555,7 @@ Please clarify this for me in a way that helps me truly understand."""
             btn.bind("<Shift-Tab>", on_window_shift_tab)
             btn.bind("<FocusIn>", lambda e, n=btn_name: on_focus_in(e, n))
             btn.bind("<FocusOut>", lambda e, n=btn_name: on_focus_out(e, n))
-            btn.bind("<Button-1>", lambda e, n=btn_name: on_click(e, n))
+            btn.bind("<Button-1>", lambda e, n=btn_name: on_click(e, n), add="+")
             # Also bind to internal canvas which actually receives focus
             try:
                 if hasattr(btn, '_canvas'):
@@ -4563,7 +4563,7 @@ Please clarify this for me in a way that helps me truly understand."""
                     btn._canvas.bind("<Shift-Tab>", on_window_shift_tab)
                     btn._canvas.bind("<FocusIn>", lambda e, n=btn_name: on_focus_in(e, f"{n}._canvas"))
                     btn._canvas.bind("<FocusOut>", lambda e, n=btn_name: on_focus_out(e, f"{n}._canvas"))
-                    btn._canvas.bind("<Button-1>", lambda e, n=btn_name: on_click(e, f"{n}._canvas"))
+                    btn._canvas.bind("<Button-1>", lambda e, n=btn_name: on_click(e, f"{n}._canvas"), add="+")
             except Exception as ex:
                 debug_log("QQ_BIND_ERROR", f"Failed to bind canvas for {btn_name}", {"error": str(ex)})
             # Also bind to internal text label which can receive focus
@@ -4580,14 +4580,14 @@ Please clarify this for me in a way that helps me truly understand."""
         submit_btn.bind("<Shift-Tab>", on_window_shift_tab)
         submit_btn.bind("<FocusIn>", lambda e: on_focus_in(e, "submit_btn"))
         submit_btn.bind("<FocusOut>", lambda e: on_focus_out(e, "submit_btn"))
-        submit_btn.bind("<Button-1>", lambda e: on_click(e, "submit_btn"))
+        submit_btn.bind("<Button-1>", lambda e: on_click(e, "submit_btn"), add="+")
         try:
             if hasattr(submit_btn, '_canvas'):
                 submit_btn._canvas.bind("<Tab>", on_window_tab)
                 submit_btn._canvas.bind("<Shift-Tab>", on_window_shift_tab)
                 submit_btn._canvas.bind("<FocusIn>", lambda e: on_focus_in(e, "submit_btn._canvas"))
                 submit_btn._canvas.bind("<FocusOut>", lambda e: on_focus_out(e, "submit_btn._canvas"))
-                submit_btn._canvas.bind("<Button-1>", lambda e: on_click(e, "submit_btn._canvas"))
+                submit_btn._canvas.bind("<Button-1>", lambda e: on_click(e, "submit_btn._canvas"), add="+")
         except Exception as ex:
             debug_log("QQ_BIND_ERROR", f"Failed to bind submit canvas", {"error": str(ex)})
         try:
@@ -4599,13 +4599,22 @@ Please clarify this for me in a way that helps me truly understand."""
         except Exception as ex:
             debug_log("QQ_BIND_ERROR", f"Failed to bind submit text_label", {"error": str(ex)})
         
-        # Bind to internal textbox to prevent indent
+        # Define on_return BEFORE binding it
+        def on_return(e):
+            if e.state & 0x1:  # Shift key - allow newline
+                return
+            submit_question()
+            return "break"
+        
+        # Bind to internal textbox to prevent indent AND handle Return key
         try:
             internal = input_text._textbox
             internal.bind("<Tab>", on_window_tab)
             internal.bind("<Shift-Tab>", on_window_shift_tab)
             internal.bind("<FocusIn>", lambda e: on_focus_in(e, "input_text._textbox"))
             internal.bind("<FocusOut>", lambda e: on_focus_out(e, "input_text._textbox"))
+            # Also bind Return key to internal textbox (focus is actually here)
+            internal.bind("<Return>", on_return)
         except AttributeError:
             pass
         
@@ -4622,12 +4631,7 @@ Please clarify this for me in a way that helps me truly understand."""
         
         submit_btn.bind("<Return>", on_button_enter)
         
-        # Bind Enter to submit (but not Shift+Enter) - for textbox only
-        def on_return(e):
-            if e.state & 0x1:  # Shift key - allow newline
-                return
-            submit_question()
-            return "break"
+        # Also bind Enter to the wrapper textbox
         input_text.bind("<Return>", on_return)
         
         debug_log("QUICK_QUESTION", "Dialog created")
@@ -4763,15 +4767,14 @@ Please clarify this for me in a way that helps me truly understand."""
         while self.current_word_index < len(self.formatted_words) and not self.stop_playback:
             word, is_line_break, is_headline = self.formatted_words[self.current_word_index]
             
-            # Display the word
-            self.window.after(0, lambda w=word: self.word_label.configure(text=w))
+            # Display the word using the same method as regular playback
+            self.window.after(0, lambda w=word: self.display_word(w))
             
-            # Update progress
-            progress = (self.current_word_index + 1) / len(self.formatted_words)
-            self.window.after(0, lambda p=progress: self.progress_bar.set(p) if self.progress_bar else None)
-            self.window.after(0, lambda: self.progress_label.configure(
-                text=f"{self.current_word_index + 1}/{len(self.formatted_words)}"
-            ) if self.progress_label else None)
+            # Update progress bar
+            self.window.after(0, self.update_progress_bar)
+            
+            # Force UI update to ensure word displays immediately
+            self.window.after(0, lambda: self.window.update_idletasks())
             
             # Calculate delay
             word_multiplier = self.get_word_length_multiplier(word)
@@ -6315,6 +6318,8 @@ Generate questions that test understanding, not just recall. Make them challengi
         # Reset quick answer mode (we're in normal clipboard mode now)
         self.quick_answer_mode = False
         self.quick_answer = ""
+        self.pending_quick_answer = None
+        self._on_quick_answer_complete = None
         
         # Reset simplified explanation state (new text = new explanations needed)
         self.simplified_explanations = []
@@ -6582,10 +6587,10 @@ Generate questions that test understanding, not just recall. Make them challengi
             self.word_label.configure(text="No text in clipboard")
             return
         
-        # Ensure quick_answer_mode is off for clipboard reading
-        # (should already be reset by show_window, but extra safety)
-        if not getattr(self, 'quick_answer_mode', False):
-            self.quick_answer_mode = False
+        # Clear any lingering quick answer callbacks to prevent
+        # the quick answer window from appearing after normal playback
+        self._on_quick_answer_complete = None
+        self.pending_quick_answer = None
         
         self.is_playing = True
         self.is_paused = False
