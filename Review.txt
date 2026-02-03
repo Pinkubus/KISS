@@ -1,0 +1,78 @@
+
+2026-02-01 00:49:09
+Type: multiple_choice
+Q: Which Amazon EC2 pricing option offers the highest potential discount?
+Correct Answer: D
+------------------------------------------------------------
+
+2026-02-01 00:51:01
+Type: multiple_select
+Q: Select ALL that apply: Which scenarios are best suited for using Spot Instances?
+Correct Answer: A, C
+------------------------------------------------------------
+
+2026-02-01 00:51:43
+Type: short_answer
+Q: Explain the difference between Dedicated Instances and Dedicated Hosts.
+Correct Answer: Dedicated Instances provide isolation on shared hardware, while Dedicated Hosts offer exclusive use of a physical server.
+------------------------------------------------------------
+
+2026-02-01 00:52:25
+Type: short_answer
+Q: What is the primary advantage of using EC2 Capacity Reservations?
+Correct Answer: They ensure reserved compute capacity in a specific Availability Zone for critical workloads.
+------------------------------------------------------------
+
+2026-02-01 00:53:09
+Type: multiple_select
+Q: Select ALL that apply: What are the benefits of using On-Demand pricing for EC2?
+Correct Answer: A, D
+------------------------------------------------------------
+
+2026-02-01 00:54:43
+Type: multiple_choice
+Q: What is a key feature of Reserved Instances?
+Correct Answer: C
+------------------------------------------------------------
+
+2026-02-01 01:02:42
+Type: short_answer
+Q: What is the primary benefit of using Savings Plans for Amazon EC2 pricing?
+Correct Answer: Savings Plans offer lower prices in exchange for a commitment to a specific amount of usage, applicable across various services.
+------------------------------------------------------------
+
+2026-02-01 01:04:41
+Type: multiple_select
+Q: Select ALL that apply: Which of the following statements are true about Savings Plans?
+Correct Answer: A, C
+------------------------------------------------------------
+
+2026-02-01 01:04:53
+Type: multiple_select
+Q: Select ALL that apply: Which pricing options are suitable for workloads with strict capacity requirements?
+Correct Answer: A, C
+------------------------------------------------------------
+
+2026-02-01 01:05:31
+Type: short_answer
+Q: Explain the purpose of Amazon EC2 Capacity Reservations.
+Correct Answer: Capacity Reservations allow users to reserve compute capacity in a specific Availability Zone for critical workloads.
+------------------------------------------------------------
+
+2026-02-01 01:06:24
+Type: multiple_select
+Q: Select ALL that apply: What are the characteristics of Dedicated Hosts?
+Correct Answer: A, C, D
+------------------------------------------------------------
+
+2026-02-01 01:07:42
+Type: multiple_choice
+Q: What is the maximum discount that Savings Plans can provide compared to On-Demand pricing?
+Correct Answer: C
+------------------------------------------------------------
+
+2026-02-01 01:07:59
+Type: multiple_select
+Q: Select ALL that apply: Which of the following options are characteristics of Spot Instances?
+Correct Answer: A, C, D
+------------------------------------------------------------

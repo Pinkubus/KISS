@@ -1,0 +1,2666 @@
+
+[NOTE_1] Amazon EC2 Pricing Options Explained
+2026-01-31 15:17:18
+--------------------------------------------------------------------------------
+Amazon EC2 Pricing
+In this lesson, you will learn how to do the following:
+
+Explain the available Amazon EC2 pricing options.
+
+Describe when to use each pricing option based on specific use cases.
+
+Describe Amazon EC2 Capacity Reservations and Reserved Instance (RI) flexibility.
+
+In this lesson, you will learn about the pricing options for Amazon EC2. This information will help you find the most cost-effective solution for your workloads—whether you're just getting started or aiming to maximize savings on long-term usage.
+
+Play Video
+
+Transcript: Amazon EC2 Pricing
+We talked about Amazon EC2 instance types, but you're all probably wondering, “How much is this gonna cost me?” Well, don't fret. For EC2, we have multiple billing options available.
+
+The most widely known option is called On-Demand. This means you only pay for the duration that your instance runs. This can be per hour or per second, depending on the instance type and the OS you choose. Even better, no long-term commitments or upfront payments are needed. Most customers typically use this option when they get started. This makes it possible to spin up servers, play around, test out workloads. It’s all self-service. This helps you figure out a baseline for your average usage. Using that average, you can start to explore other pricing options, like the next one, Savings Plans.
+
+Savings Plans offers lower EC2 prices for a commitment to a consistent amount of usage. This is measured in dollars per hour for a one-year or three-year term. This can provide savings of up to 72 percent, which is pretty significant. In fact, it can lower prices on your EC2 usage, regardless of instance family, size, OS, tenancy, or AWS Region. Additionally, it applies to AWS Fargate and AWS Lambda usage. Those are serverless compute options that we’ll cover later.
+
+Another option is Reserved Instances. These are well-suited for steady-state workloads or ones with predictable usage. They offer you up to a 75 percent discount compared to On-Demand pricing. You qualify for a discount after you commit to a one-year or three-year term. There are also three payment options: all upfront, where you pay for them in full when you commit; partial upfront, where you pay for a portion when you commit; and no upfront, where you don't pay anything at the beginning.
+
+The next option is Spot Instances. These make it possible to request spare EC2 capacity for up to 90 percent off of the On-Demand price. The catch here is that AWS can reclaim the instance at any time. However, you do receive a two-minute warning, so you can save your progress. And you can always resume later if needed. So, make sure your workloads can tolerate being interrupted if you choose Spot Instances.
+
+And, finally, we have Dedicated Hosts. These are actual physical servers that customers can reserve for exclusive use. No other customer’s workloads can share the server. This isolation use-case is ideal for security-sensitive or licensing-specific workloads, like Windows or SQL Server. This is because you have control over instance placement and resource allocation. This helps with meeting certain compliance and regulatory needs.
+
+With the variety of EC2 pricing options available, you can choose the most cost-effective solution based on your usage patterns. This helps you to balance flexibility, cost savings, and specific workload needs.
+
+Key takeaways: AWS pricing options
+
+By understanding the different Amazon EC2 pricing options, you can make more informed decisions and optimize your costs based on your specific usage needs. To review the AWS pricing options, choose each of the following flashcards.
+
+
+Click to flipOn-Demand Instances
+
+
+Click to flipReserved Instances
+
+
+Click to flipSpot Instances
+
+
+Click to flip
+Savings Plans:
+Save up to 72 percent across a variety of instance types and services by committing to a consistent usage level for 1 or 3 years.
+
+
+Click to flip
+Dedicated Hosts:
+Reserve an entire physical server for your exclusive use. This option offers full control and is ideal for workloads with strict security or licensing needs.
+
+
+Click to flip
+Dedicated Instances:
+Pay for instances running on hardware dedicated solely to your account. This option provides isolation from other AWS customers.
+
+Dedicated Instances
+
+Dedicated Hosts provide exclusive use of physical servers, offering full control over instance placement and resource allocation. This makes them ideal for security- or compliance-driven workloads. But what if you don’t need that level of control?
+
+You could use Dedicated Instances, which offer physical isolation from other AWS accounts while still benefiting from the flexibility and cost savings of shared infrastructure.
+
+The key difference is that Dedicated Instances provide isolation without you choosing which physical server they run on. Dedicated Hosts give you an entire physical server for exclusive use, providing complete control over instance placement and resource allocation.
+
+Ultimately, the right choice depends on your specific workload requirements and the level of control you need over your infrastructure.
+
+Graphic highlights a full physical host for a Dedicated Host and a portion of the server for a Dedicated Instance.
+
+Dedicated Hosts offer exclusive use of a server with full control, whereas Dedicated Instances provide isolation without server control.
+
+More about cost optimization
+
+To optimize costs and resource allocation, AWS offers a range of pricing options including Savings Plans, Amazon EC2 Capacity Reservations, and Reserved Instances (RIs). Each of these is tailored to meet different workload and capacity needs.
+
+
+Savings Plans
+Good for: Predictable workloads
+
+Savings Plans offer discounts compared to On-Demand rates in exchange for a commitment to use a specified amount of compute power (measured per hour) over a one-year or three-year period. They provide flexible pricing for Amazon EC2, AWS Fargate, AWS Lambda, and Amazon SageMaker AI usage, regardless of instance type or AWS Region. Payment options include All upfront, Partial upfront, or No upfront.
+
+For more information, refer to What are Savings Plans?(opens in a new tab)
+
+
+Capacity Reservations
+Good for: Critical workloads with strict capacity requirements
+
+With Amazon EC2 Capacity Reservations, you reserve compute capacity in a specific Availability Zone for critical workloads. Reservations are charged at the On-Demand rate, whether used or not. You only pay for the instances you run. This is ideal for strict capacity requirements for current or future business-critical workloads.
+
+For more information, refer to Reserve compute capacity with EC2 On-Demand Capacity Reservations(opens in a new tab).
+
+
+Reserved Instance flexibility
+Good for: Steady-state workloads with predictable usage
+
+RIs offer up to 75 percent savings over On-Demand pricing by applying discounts across instance sizes and multiple Availability Zones within a Region. When you purchase a Reserved Instance (RI), AWS automatically applies the discount to other instance sizes within the same family based on the instance size footprint. It also applies the discount across multiple Availability Zones for enhanced resource distribution and fault tolerance.
+
+For more information, refer to How Reserved Instance discounts are applied(opens in a new tab).
+
+Test your skills
+
+A financial services company needs to run sensitive applications that handle confidential customer data and require compliance with industry regulations. They need complete control over the physical server, including instance placement and resource allocation.
+
+Which pricing option should they choose?
+
+
+Dedicated Hosts
+
+
+Savings Plans
+
+
+On Demand
+
+
+Spot Instances
+
+SUBMIT
+
+
+TAKE AGAIN
+A startup is running a batch processing workload that can tolerate occasional interruptions, and they want to reduce costs by taking advantage of unused Amazon EC2 capacity.
+
+Which pricing option would offer them the most savings?
+
+
+Reserved Instances
+
+
+Savings Plans
+
+
+On Demand
+
+
+Spot Instances
+
+SUBMIT
+
+
+TAKE AGAIN
+A customer is building a new application and is unsure of their usage patterns but expects to grow and stabilize usage over time. They want to start without a long-term commitment.
+
+Which pricing option should they use?
+
+
+Reserved Instances
+
+
+Savings Plans
+
+
+On Demand
+
+
+Spot Instances
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_2] Introduction to Amazon EC2 Overview
+2026-01-31 15:25:23
+--------------------------------------------------------------------------------
+Introduction to Amazon EC2
+
+Compute refers to the processing power needed to run applications, manage data, and perform calculations. In the cloud, this power is available on-demand. You can access it remotely without owning or maintaining physical hardware. Essentially, compute in the cloud means creating virtual machines with a cloud provider to run applications and tasks over the internet. In the following lessons, you will gain a thorough understanding of Amazon Elastic Compute Cloud (Amazon EC2), a powerful compute service from AWS, as you explore its flexibility, cost-effectiveness, and scalability.
+
+In this lesson, you will learn how to do the following:
+
+Describe how compute resources are provisioned and managed in the cloud.
+
+Compare the benefits and challenges of using virtual servers to managing physical servers on premises.
+
+Identify the concept of multi-tenancy in Amazon EC2.
+
+In this lesson, you will get an overview of Amazon EC2. You will learn about provisioning and managing virtual servers to host your applications and business resources.
+
+Play Video
+
+Transcript: Introduction to Amazon EC2
+In this video, we are going to talk at a high level about a service called Amazon Elastic Compute Cloud, or Amazon EC2.
+
+If you remember from our coffee shop, the employees are a metaphor for the client/server model where a client sends a request to the server, the server does some work, and then sends a response.
+
+That example is for the coffee shop, but the same idea applies to other businesses. These businesses, whether they are in healthcare, manufacturing, insurance, or delivering video content, are also using this model to deliver products, resources, or data to end users.
+
+You need raw compute capacity to host your applications and provide the compute power that your business needs. When you're working with AWS, those servers are called EC2 instances. Using EC2 for compute is highly flexible, cost effective, and quick when you compare it to running your own servers on premises in a data center that you own. The time and money it takes to get up and running with on-premises resources is fairly high, but with EC2, it's much more convenient to get started.
+
+AWS took care of the hard part for you, and AWS is constantly operating a massive amount of compute capacity ready to be used. And you can use whatever portion of that capacity when you need it. All you have to do is request the EC2 instances you want, and they will launch and boot up, ready to be used within a few minutes. After you're done, you can stop or terminate the EC2 instances. You're not locked in or stuck with servers that you don't need or want.
+
+Your usage of EC2 instances can vary greatly over time. And you only pay for what you use. Because with EC2, you only pay for running instances, not stopped or terminated ones.
+
+EC2 instances are virtual machines, or VMs. VMs share an underlying physical host machine with multiple other instances, which is a concept called multi-tenancy. In a multi-tenant environment, you need to make sure that each VM is isolated from each other but is still able to share resources provided by the host.
+
+This job of resource sharing and isolation is being done by a piece of software called a hypervisor, which is running on the host machine. For EC2, AWS manages the underlying host, the hypervisor, and the isolation from instance to instance. So, even though you won't be managing this piece, it's important to have a basic grasp of the concept of multi-tenancy.
+
+When you provision an EC2 instance, you can choose the operating system, or OS, based on either Windows or Linux. You can provision thousands of EC2 instances on demand, with a blend of operating systems and configurations to power your business' different applications.
+
+You also can configure what software you want running on the instance. Whether it's your own internal business applications, simple or complex web apps, databases, or third-party software like enterprise software packages, you have complete control over what happens on that instance. You'll see us launch an EC2 instance in an upcoming demo.
+
+EC2 instances are also resizable. You might start with a small instance and realize the application you are running is starting to max out that server. You can then give that instance more memory and more CPU.  This is what we call vertically scaling an instance. In essence, you can make instances bigger or smaller whenever you need to.
+
+You also control the networking aspect of EC2. So, you decide what type of requests make it to your server and if they are publicly or privately accessible. We'll talk more about this later in the networking section.
+
+Now, it's important to note that the concept of VMs isn’t a new thing. AWS has just made it much more convenient and more cost effective for you to acquire servers through this Compute as a Service model.
+
+
+Amazon EC2
+
+Amazon EC2 is more flexible, cost-effective, and faster than managing on-premises servers. It offers on-demand compute capacity that can be quickly launched, scaled, and terminated, with costs based only on active usage.
+
+The flexibility of Amazon EC2 allows for faster development and deployment of applications. You can launch as many or as few virtual servers as needed and configure security, networking, and storage. You can also scale resources up or down based on usage, such as handling high traffic or compute-heavy tasks.
+
+Key takeaways: Comparing on-premises and cloud resources
+
+When designing infrastructure for your business, selecting the right resources can significantly affect your efficiency, flexibility, and overall costs. Review the key differences between on-premises and cloud resource management.
+
+Challenges of on-premises resources
+Imagine that you're responsible for designing your company's infrastructure to support new websites. With traditional on-premises resources, you must purchase hardware upfront, wait for delivery, and handle installation and configuration. This process is time-consuming, costly, and inflexible because you're locked into a specific capacity that might not align with changing demands.
+
+
+Benefits of using Cloud Resources
+In contrast, with Amazon EC2, you can quickly launch, scale, and stop instances based on your needs without the delays and upfront costs associated with traditional on-premises resources.
+
+Pay for compute time when instances run, launch EC2 instances in minutes, scale based on demand, and stop when done.
+How Amazon EC2 works
+
+You’ve learned that AWS manages complex infrastructure, offering on-demand compute capacity that’s available whenever you need it. You can request EC2 instances and have them ready to use within minutes. But how do you actually get started?
+
+Choose the arrow buttons to display each of the following three steps.
+
+
+1
+2
+3
+
+
+Accessing on-demand compute capacity
+
+With Amazon EC2, you can quickly launch, connect to, and use virtual instances in the cloud. Here's an overview of how the process works.
+
+
+START
+
+
+
+
+Test your skills
+
+How does Amazon EC2 compare to running servers on premises?
+
+
+It is more expensive but offers more control.
+
+
+It is more flexible, cost-effective, and quicker to get started.
+
+
+It requires more time to set up and maintain.
+
+
+It is only useful for large businesses.
+
+SUBMIT
+
+
+TAKE AGAIN
+What is multi-tenancy in the context of Amazon EC2 instances?
+
+
+Each virtual machine is isolated but shares resources from a host machine.
+
+
+Multiple servers run in the same data center.
+
+
+Only one user can use the instance at a time.
+
+
+A server can only run one type of application.
+
+SUBMIT
+
+
+TAKE AGAIN
+A company uses Amazon EC2 instances to deploy their application.
+
+What would happen if they need to stop or terminate the EC2 instances?
+
+
+You are still charged for the instances.
+
+
+The instances will automatically restart after a set time.
+
+
+You pay only for running instances, not for stopped or terminated ones.
+
+
+Your instances are permanently deleted and cannot be recovered.
+
+SUBMIT
+
+
+TAKE AGAIN
+What must be specified when preparing to launch an Amazon EC2 instance?
+
+
+The type of instance and the operating system
+
+
+The amount of storage and the number of users
+
+
+The instance's location and backup plan
+
+
+The network bandwidth and data transfer limit
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_3] Understanding Amazon EC2 Instance Types
+2026-01-31 15:25:44
+--------------------------------------------------------------------------------
+Amazon EC2 Instance Types
+In this lesson, you will learn how to do the following:
+
+Explain the different EC2 instance types and their characteristics.
+
+Identify appropriate use cases for each EC2 instance type.
+
+Amazon EC2 offers a broad range of instance types, each tailored to meet specific use case requirements. These instances come with varying combinations of CPU, memory, storage, and networking capabilities, so you can choose the right mix of resources to optimize performance for your applications.
+
+Play Video
+
+Transcript: A Little More About Amazon EC2
+Key takeaways: EC2 instance types
+
+Whether you're running a simple web service or complex data processing tasks, Amazon EC2 provides the flexibility to select the ideal instance type for your needs.
+
+To review EC2 instance types, choose each of the five numbered markers.
+
+
+
+
+
+
+
+Instance types are named based on their instance family and instance size. For information about these naming conventions, refer to Amazon EC2 instance type naming conventions(opens in a new tab).
+
+Test your skills
+
+A financial institution is running a real-time analytics application that processes large datasets stored across multiple servers to provide quick query results. The application requires fast processing of data with a focus on handling large volumes of information efficiently.
+
+Which Amazon EC2 instance type would be the BEST choice for this task?
+
+
+General purpose
+
+
+Compute optimized
+
+
+Storage optimized
+
+
+Memory optimized
+
+SUBMIT
+
+
+TAKE AGAIN
+A retail company is setting up a solution to analyze historical sales data that is stored locally. The solution requires fast access to large datasets with consistent, high disk throughput for quick data retrieval.
+
+Which Amazon EC2 instance type would be the MOST suitable for this use case?
+
+
+General purpose
+
+
+Compute optimized
+
+
+Accelerated computing
+
+
+Storage optimized
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_4] Provisioning AWS Resources Simplified
+2026-01-31 15:26:00
+--------------------------------------------------------------------------------
+How to Provision AWS Resources
+In this lesson, you will learn how to do the following:
+
+Explain how to use the AWS Management Console, the AWS Command Line Interface (AWS CLI), and the AWS SDK to interact with AWS services.
+
+Describe the customer and AWS responsibilities regarding virtual machines.
+
+Explain the differences between managed and unmanaged services.
+
+In AWS, tasks such as launching an EC2 instance, stopping an instance, or modifying instance settings are done through API requests. APIs provide predefined methods to interact with, manage, and configure AWS resources efficiently. In this lesson, you will learn about the three main ways to call AWS APIs.
+
+Play Video
+
+Transcript: How to Provision AWS Resources
+Key takeaways: Interacting with AWS services
+
+All interactions with services are powered by APIs. You can access these APIs through three primary methods: the AWS Management Console, the AWS CLI, or the AWS SDK. Let's review these methods.
+
+
+
+
+AWS Management Console
+
+AWS CLI
+
+AWS SDK
+Compute and shared responsibility
+
+The AWS Shared Responsibility Model outlines the division of duties between the customer and AWS. AWS handles the security of the cloud (hardware and infrastructure), whereas the customer is responsible for security in the cloud (applications, data, and access control).
+
+An unmanaged service like Amazon EC2 requires you to perform all of the necessary security configuration and management tasks. When you deploy an EC2 instance, you are responsible for configuring security, managing the guest operating system (OS), applying updates, and setting up firewalls (security groups). You will learn more about managed and unmanaged services later.
+
+Customer and AWS responsibilities in the AWS Shared Responsibility Model for unmanaged services. AWS is responsible for the cloud infrastructure.
+
+Customer and AWS responsibilities in the AWS Shared Responsibility Model. 
+
+Test your skills
+
+What is a primary advantage of using the AWS Command Line Interface (AWS CLI) over the AWS Management Console?
+
+
+It provides a visual, drag-and-drop interface for managing AWS resources.
+
+
+It uses automation and scripting, which reduces manual steps and errors.
+
+
+It is only available for Windows users.
+
+
+It requires fewer configurations and is ideal for one-time manual provisioning.
+
+SUBMIT
+
+
+TAKE AGAIN
+What is the customer's responsibility when using compute services like Amazon EC2 according to the AWS shared responsibility model?
+
+
+AWS manages the security of the cloud, and the customer manages the security of the infrastructure.
+
+
+The customer is responsible for securing the physical hardware of their EC2 instances.
+
+
+AWS is responsible for managing the operating system, networking, and applications on the customer's EC2 instances.
+
+
+The customer is responsible for configuring, securing, and managing the operating system, networking, and applications on their EC2 instances.
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_5] Launching an Amazon EC2 Instance
+2026-01-31 15:26:17
+--------------------------------------------------------------------------------
+Demo: Launching an Amazon EC2 Instance
+In this lesson, you will learn how to do the following:
+
+Identify the key configurations needed when setting up an EC2 instance.­­
+
+Explain how an AMI maintains consistency and efficiency when scaling applications.
+
+Amazon EC2 demonstration
+
+If you're eager to understand how Amazon EC2 works, this is your chance to see it in action! In this demo, you learn about the basic steps of launching an EC2 instance. By the end of this demo, you will have a fully functional EC2 instance.
+
+Play Video
+
+Transcript: Configure and Launch an Amazon EC2 Instance
+You've been learning a lot about EC2, and by now, you're probably thinking, "How do I create an EC2 instance myself?" In this video, we’re going to walk through the process of creating an EC2 instance for a web server using the AWS Management Console. We’ll go over some key configurations along the way, so let’s get started! First thing we want to do is go to the EC2 console.
+
+Now, I happen to have it here in my "Recently visited" and in my shortcuts bar, but I can just as easily search for EC2 and go to that service. There are tons of options in here, but we're gonna go and zero in, specifically, on the launch instance option.
+
+First thing we have to choose is a name. We have to choose our instance name, so we can find it later. Next thing we're gonna do is choose the Amazon Machine Image, or AMI. An AMI is a template of the operating system and the built-in applications that it's going to come with. We can customize this but for right now, we're going to go with a default, the Amazon Linux AMI. Now this Amazon Linux AMI is perfect for a general-use web server.
+
+The next thing we have to decide on is the instance type. This refers to how much computing power our web server is going to have. In this case, we're gonna choose just the basic, t2.micro. We'll go over some of the details that makes up this t2.micro a little bit later, but for right now, this is going to be fine. One virtual CPU, one gigabyte of memory, and it's in the Free Tier. Sounds good to me.
+
+The next thing we choose is the key pair. And this is related to how we are logging into this EC2 instance. A key pair refers to a pair of keys. Specifically, a public key, which is going to be injected into the EC2 instance, and a private key, which we will keep. We can create that key pair right here, but I'm gonna go ahead and choose a key that we've already established.
+
+The next section is choosing the network settings. We're going to have a lot of fun going through all these details a little bit later. But for right now, suffice it to say, we're going to allow HTTP traffic from the internet. It is going to be a web server, after all, so that's all we have to do.
+
+The next option we have to choose is the storage options for our EC2 instance. In this case, we're going to give it eight gigabytes of disk space using the gp3 EBS volume, or elastic block store volume. We'll go over what that means a little bit later, but this means it's going to have plenty of space for web serving.
+
+And speaking of web serving, we do have to make one more change, so it actually is a web server. When we picked the AMI, we picked a very generic AMI. This doesn't have the web server activated at launch. In order to that, we're going to go into the Advanced Details, specifically down to the User Data section. What the User Data allows us to do is paste in a script, such as this one, which will go ahead and install and activate the Nginx web server, which is what we're going to be using to server content to the internet.
+
+All this looks fine, so I'm gonna go ahead and hit launch instance, and we'll see what we get. As soon as the instance launches, we can go to its console and see some of the details about that EC2 instance.
+
+Now that our EC2 instance is running, I'm going to copy its public IP address. I'm going to open a new browser, and let's go to it. And there you have it! Your very own EC2 instance running a basic web server.
+
+Congratulations! That’s the basic thing for setting up EC2 instances, and we’re gonna get into more details about the nuances later in the course. So stay tuned.
+
+Amazon Machine Images
+
+In the demo, you got a quick introduction to AMIs. AMIs are pre-built virtual machine images that have the basic components for what is needed to start an instance. Now, let's explore AMIs in more detail.
+
+AMI components
+An AMI includes the operating system, storage setup, architecture type, permissions for launching, and any extra software that is already installed. You can use one AMI to launch several EC2 instances that all have the same setup.
+
+
+Three ways to use AMIs
+AMIs can be used in three ways. First, you can create your own by building a custom AMI with specific configurations and software tailored to your needs. Second, you can use pre-configured AWS AMIs, which are set up for common operating systems and software. Lastly, you can purchase AMIs from the AWS Marketplace, where third-party vendors offer specialized software designed for specific use cases.
+
+
+AMI repeatability
+AMIs provide repeatability through a consistent environment for every new instance. Because configurations are identical and deployments automated, development and testing environments are consistent. This helps when scaling, reduces errors, and streamlines managing large-scale environments.
+
+
+Test your skills
+
+What are the required configurations when launching an Amazon EC2 instance for a web server? (Select THREE.)
+
+
+Amazon Machine Image (AMI)
+
+
+Load balancing
+
+
+Instance type
+
+
+Permissions
+
+
+Storage
+
+
+Instance termination behavior
+
+SUBMIT
+
+
+
+
+TAKE AGAIN
+What is an Amazon Machine Image (AMI) used for when launching an Amazon EC2 instance?
+
+
+To choose the instance size
+
+
+To configure networking settings
+
+
+To pre-configure the operating system and software
+
+
+To store instance data
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_6] Amazon EC2 Pricing Options Overview
+2026-01-31 15:26:37
+--------------------------------------------------------------------------------
+Amazon EC2 Pricing
+In this lesson, you will learn how to do the following:
+
+Explain the available Amazon EC2 pricing options.
+
+Describe when to use each pricing option based on specific use cases.
+
+Describe Amazon EC2 Capacity Reservations and Reserved Instance (RI) flexibility.
+
+In this lesson, you will learn about the pricing options for Amazon EC2. This information will help you find the most cost-effective solution for your workloads—whether you're just getting started or aiming to maximize savings on long-term usage.
+
+Play Video
+
+Transcript: Amazon EC2 Pricing
+We talked about Amazon EC2 instance types, but you're all probably wondering, “How much is this gonna cost me?” Well, don't fret. For EC2, we have multiple billing options available.
+
+The most widely known option is called On-Demand. This means you only pay for the duration that your instance runs. This can be per hour or per second, depending on the instance type and the OS you choose. Even better, no long-term commitments or upfront payments are needed. Most customers typically use this option when they get started. This makes it possible to spin up servers, play around, test out workloads. It’s all self-service. This helps you figure out a baseline for your average usage. Using that average, you can start to explore other pricing options, like the next one, Savings Plans.
+
+Savings Plans offers lower EC2 prices for a commitment to a consistent amount of usage. This is measured in dollars per hour for a one-year or three-year term. This can provide savings of up to 72 percent, which is pretty significant. In fact, it can lower prices on your EC2 usage, regardless of instance family, size, OS, tenancy, or AWS Region. Additionally, it applies to AWS Fargate and AWS Lambda usage. Those are serverless compute options that we’ll cover later.
+
+Another option is Reserved Instances. These are well-suited for steady-state workloads or ones with predictable usage. They offer you up to a 75 percent discount compared to On-Demand pricing. You qualify for a discount after you commit to a one-year or three-year term. There are also three payment options: all upfront, where you pay for them in full when you commit; partial upfront, where you pay for a portion when you commit; and no upfront, where you don't pay anything at the beginning.
+
+The next option is Spot Instances. These make it possible to request spare EC2 capacity for up to 90 percent off of the On-Demand price. The catch here is that AWS can reclaim the instance at any time. However, you do receive a two-minute warning, so you can save your progress. And you can always resume later if needed. So, make sure your workloads can tolerate being interrupted if you choose Spot Instances.
+
+And, finally, we have Dedicated Hosts. These are actual physical servers that customers can reserve for exclusive use. No other customer’s workloads can share the server. This isolation use-case is ideal for security-sensitive or licensing-specific workloads, like Windows or SQL Server. This is because you have control over instance placement and resource allocation. This helps with meeting certain compliance and regulatory needs.
+
+With the variety of EC2 pricing options available, you can choose the most cost-effective solution based on your usage patterns. This helps you to balance flexibility, cost savings, and specific workload needs.
+
+Key takeaways: AWS pricing options
+
+By understanding the different Amazon EC2 pricing options, you can make more informed decisions and optimize your costs based on your specific usage needs. To review the AWS pricing options, choose each of the following flashcards.
+
+
+Click to flipOn-Demand Instances
+
+
+Click to flipReserved Instances
+
+
+Click to flipSpot Instances
+
+
+Click to flipSavings Plans
+
+
+Click to flipDedicated Hosts
+
+
+Click to flipDedicated Instances
+
+Dedicated Instances
+
+Dedicated Hosts provide exclusive use of physical servers, offering full control over instance placement and resource allocation. This makes them ideal for security- or compliance-driven workloads. But what if you don’t need that level of control?
+
+You could use Dedicated Instances, which offer physical isolation from other AWS accounts while still benefiting from the flexibility and cost savings of shared infrastructure.
+
+The key difference is that Dedicated Instances provide isolation without you choosing which physical server they run on. Dedicated Hosts give you an entire physical server for exclusive use, providing complete control over instance placement and resource allocation.
+
+Ultimately, the right choice depends on your specific workload requirements and the level of control you need over your infrastructure.
+
+Graphic highlights a full physical host for a Dedicated Host and a portion of the server for a Dedicated Instance.
+
+Dedicated Hosts offer exclusive use of a server with full control, whereas Dedicated Instances provide isolation without server control.
+
+More about cost optimization
+
+To optimize costs and resource allocation, AWS offers a range of pricing options including Savings Plans, Amazon EC2 Capacity Reservations, and Reserved Instances (RIs). Each of these is tailored to meet different workload and capacity needs.
+
+
+Savings Plans
+
+Capacity Reservations
+
+Reserved Instance flexibility
+Test your skills
+
+A financial services company needs to run sensitive applications that handle confidential customer data and require compliance with industry regulations. They need complete control over the physical server, including instance placement and resource allocation.
+
+Which pricing option should they choose?
+
+
+Dedicated Hosts
+
+
+Savings Plans
+
+
+On Demand
+
+
+Spot Instances
+
+SUBMIT
+
+
+TAKE AGAIN
+A startup is running a batch processing workload that can tolerate occasional interruptions, and they want to reduce costs by taking advantage of unused Amazon EC2 capacity.
+
+Which pricing option would offer them the most savings?
+
+
+Reserved Instances
+
+
+Savings Plans
+
+
+On Demand
+
+
+Spot Instances
+
+SUBMIT
+
+
+TAKE AGAIN
+A customer is building a new application and is unsure of their usage patterns but expects to grow and stabilize usage over time. They want to start without a long-term commitment.
+
+Which pricing option should they use?
+
+
+Reserved Instances
+
+
+Savings Plans
+
+
+On Demand
+
+
+Spot Instances
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_7] Elastic Load Balancing in AWS
+2026-01-31 15:27:30
+--------------------------------------------------------------------------------
+Directing Traffic with Elastic Load Balancing
+In this lesson, you will learn how to do the following:
+
+Describe the challenge of traffic distribution and scalability in AWS environments.
+
+Recognize the benefits of Elastic Load Balancing (ELB) in AWS.
+
+Explain the relationship between Amazon EC2 Auto Scaling and ELB in managing AWS resources.
+
+Spreading workloads improves the performance of your applications by preventing any single resource from having to handle the full workload on its own. In this lesson, you will learn how ELB simplifies traffic distribution and management for AWS applications.
+
+Play Video
+
+Transcript: Directing traffic with Elastic Load Balancing
+We solved the scaling problem with Amazon EC2 Auto Scaling. But now we've got a bit of a traffic problem, don't we? Let's take a look at the situation.
+
+Customers have three cashier options, but it seems like they are gravitating towards me, cause I’m just so darn adorable. Look, although I am flattered they noticed my new haircut, this is causing an uneven distribution of customers per line.
+
+Look over there. Morgan and Alan have no customers and are just taking selfies. Pfft, they should have gotten new haircuts, too. Anyway, in place of that, it would help a lot if we added a host to our coffee shop.
+
+The host stands at the entrance and directs customers to a specific line when they walk in. They also keep an eye on the cashiers and count the number of people in each line. Using this real-time information, they direct customers to the shortest line. This helps with evenly distributing customers and ensures they are served efficiently and quickly.
+
+The same idea applies to your AWS environment when trying to balance traffic across a group of EC2 instances. We don’t want idle EC2 instances, nor do we want overloaded ones. This is where we introduce the concept of a load balancer.
+
+A load balancer takes in requests and routes them to instances. There are many off-the-shelf load balancers that work great on AWS. So, if you have a favorite flavor that already does exactly what you want, feel free to keep using it. Just remember that you will have to manage, patch, upgrade, handle failover, and perform maintenance on it.
+
+However, if you would like AWS to handle all of that, and you just configure it once, check out Elastic Load Balancing, or ELB. ELB is designed to distribute network traffic to improve application scalability. The word elastic refers to its ability to scale up or down based on traffic, without adding to your hourly costs.
+
+ELB can manage both internal and external traffic to AWS. It offers different routing strategies to ensure efficient traffic management and thusly optimal application performance.
+
+Let’s dive into an example. For our coffee shop, we have a website for customers to order drinks. This website has various tiers for functionality, like the ordering tier, production tier, storage tier, and so forth.
+
+Let's look at the ordering tier and how it communicates with the production tier. Right now, every frontend instance is aware of every backend instance. If a new backend instance spins up, then it needs to let every frontend instance know that it can now accept traffic.
+
+This is complicated enough with half a dozen instances. Imagine if we have hundreds or thousands of instances in every tier. Keeping them in sync would be a huge undertaking.
+
+That’s why ELB is here to help. We can use it to manage the linking of the backend instances and the frontend instances. And because it’s Regional, it's a single URL that each frontend instance uses to direct to the backend instances. The ELB will then direct traffic to the backend instance that has the least outstanding requests.
+
+If the back-end needs to scale, it spins up a new instance. After that new instance is ready, it tells the ELB that it’s ready for traffic. And just like that, it gets to work.
+
+The frontend doesn’t even need to know what’s happening. It’s all done automatically, and it decouples the architecture so that each tier is considered its own entity that scales as it sees fit.
+
+
+Elastic Load Balancing
+
+Elastic Load Balancing (ELB) automatically distributes incoming application traffic across multiple resources, such as EC2 instances, to optimize performance and reliability. A load balancer serves as the single point of contact for all incoming web traffic to an Auto Scaling group. As the number of EC2 instances fluctuates in response to traffic demands, incoming requests are first directed to the load balancer. From there, the traffic is distributed evenly across the available instances.
+
+Although ELB and Amazon EC2 Auto Scaling are distinct services, they work in tandem to enhance application performance and ensure high availability. Together, they enable applications running on Amazon EC2 to scale effectively while maintaining consistent performance.
+
+Key takeaways: ELB benefits
+
+Let's review the main benefits of elastic load balancing and how it enhances the performance, scalability, and management of your AWS environment. To learn more, choose each of the following flashcards.
+
+
+Click to flipEfficient traffic distribution.
+
+
+Click to flipAutomatic scaling.
+
+
+Click to flipSimplified management.
+
+Routing methods
+
+To optimize traffic distribution, ELB uses several routing methods: Round Robin, Least Connections, IP Hash, and Least Response Time. These routing strategies work together for efficient traffic management and optimal application performance.
+
+
+Round Robin
+Distributes traffic evenly across all available servers in a cyclic manner.
+
+
+Least Connections
+Routes traffic to the server with the fewest active connections, maintaining a balanced load.
+
+
+IP Hash
+
+Uses the client’s IP address to consistently route traffic to the same server.
+
+
+Least Response Time
+Directs traffic to the server with the fastest response time, minimizing latency.
+
+Example: Elastic Load Balancing
+
+Let's look at an example to better understand how Elastic Load Balancing works in cloud computing. In the healthcare industry, particularly in hospitals and medical facilities that provide online appointment booking systems or patient portals, website traffic can vary greatly throughout the day.
+
+
+Initial setup
+
+Scaling up
+
+Load Balancing
+Low-demand period: At the beginning of the day, only a few patients are accessing the system to book appointments or view medical records. The existing web servers are sufficient to handle the low traffic. This matches the demand, with no need for additional resources at this point.
+
+end of tab
+By using Elastic Load Balancing and Auto Scaling, the healthcare industry can efficiently manage the varying levels of patient traffic to online services. This provides reliable access to medical portals even during high-demand periods.
+
+Test your skills
+
+How does Elastic Load Balancing (ELB) improve scalability in AWS?
+
+
+It manually adjusts the number of Amazon EC2 instances based on traffic.
+
+
+It automatically routes traffic to instances based on various routing methods.
+
+
+It directly increases the size of Amazon EC2 instances.
+
+
+It creates new Amazon EC2 instances for each request.
+
+SUBMIT
+
+
+TAKE AGAIN
+Which task does Elastic Load Balancing (ELB) perform?
+
+
+Automatically adjusts the number of Amazon EC2 instances to match demand.
+
+
+Distributes a workload across several Amazon EC2 instances.
+
+
+Removes unneeded Amazon EC2 instances when demand is low.
+
+
+Adds a second Amazon EC2 instance during an online store's popular sale.
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_8] Managing Traffic with Elastic Load Balancing
+2026-01-31 15:38:04
+--------------------------------------------------------------------------------
+Directing Traffic with Elastic Load Balancing
+In this lesson, you will learn how to do the following:
+
+Describe the challenge of traffic distribution and scalability in AWS environments.
+
+Recognize the benefits of Elastic Load Balancing (ELB) in AWS.
+
+Explain the relationship between Amazon EC2 Auto Scaling and ELB in managing AWS resources.
+
+Spreading workloads improves the performance of your applications by preventing any single resource from having to handle the full workload on its own. In this lesson, you will learn how ELB simplifies traffic distribution and management for AWS applications.
+
+Play Video
+
+Transcript: Directing traffic with Elastic Load Balancing
+We solved the scaling problem with Amazon EC2 Auto Scaling. But now we've got a bit of a traffic problem, don't we? Let's take a look at the situation.
+
+Customers have three cashier options, but it seems like they are gravitating towards me, cause I’m just so darn adorable. Look, although I am flattered they noticed my new haircut, this is causing an uneven distribution of customers per line.
+
+Look over there. Morgan and Alan have no customers and are just taking selfies. Pfft, they should have gotten new haircuts, too. Anyway, in place of that, it would help a lot if we added a host to our coffee shop.
+
+The host stands at the entrance and directs customers to a specific line when they walk in. They also keep an eye on the cashiers and count the number of people in each line. Using this real-time information, they direct customers to the shortest line. This helps with evenly distributing customers and ensures they are served efficiently and quickly.
+
+The same idea applies to your AWS environment when trying to balance traffic across a group of EC2 instances. We don’t want idle EC2 instances, nor do we want overloaded ones. This is where we introduce the concept of a load balancer.
+
+A load balancer takes in requests and routes them to instances. There are many off-the-shelf load balancers that work great on AWS. So, if you have a favorite flavor that already does exactly what you want, feel free to keep using it. Just remember that you will have to manage, patch, upgrade, handle failover, and perform maintenance on it.
+
+However, if you would like AWS to handle all of that, and you just configure it once, check out Elastic Load Balancing, or ELB. ELB is designed to distribute network traffic to improve application scalability. The word elastic refers to its ability to scale up or down based on traffic, without adding to your hourly costs.
+
+ELB can manage both internal and external traffic to AWS. It offers different routing strategies to ensure efficient traffic management and thusly optimal application performance.
+
+Let’s dive into an example. For our coffee shop, we have a website for customers to order drinks. This website has various tiers for functionality, like the ordering tier, production tier, storage tier, and so forth.
+
+Let's look at the ordering tier and how it communicates with the production tier. Right now, every frontend instance is aware of every backend instance. If a new backend instance spins up, then it needs to let every frontend instance know that it can now accept traffic.
+
+This is complicated enough with half a dozen instances. Imagine if we have hundreds or thousands of instances in every tier. Keeping them in sync would be a huge undertaking.
+
+That’s why ELB is here to help. We can use it to manage the linking of the backend instances and the frontend instances. And because it’s Regional, it's a single URL that each frontend instance uses to direct to the backend instances. The ELB will then direct traffic to the backend instance that has the least outstanding requests.
+
+If the back-end needs to scale, it spins up a new instance. After that new instance is ready, it tells the ELB that it’s ready for traffic. And just like that, it gets to work.
+
+The frontend doesn’t even need to know what’s happening. It’s all done automatically, and it decouples the architecture so that each tier is considered its own entity that scales as it sees fit.
+
+
+Elastic Load Balancing
+
+Elastic Load Balancing (ELB) automatically distributes incoming application traffic across multiple resources, such as EC2 instances, to optimize performance and reliability. A load balancer serves as the single point of contact for all incoming web traffic to an Auto Scaling group. As the number of EC2 instances fluctuates in response to traffic demands, incoming requests are first directed to the load balancer. From there, the traffic is distributed evenly across the available instances.
+
+Although ELB and Amazon EC2 Auto Scaling are distinct services, they work in tandem to enhance application performance and ensure high availability. Together, they enable applications running on Amazon EC2 to scale effectively while maintaining consistent performance.
+
+Key takeaways: ELB benefits
+
+Let's review the main benefits of elastic load balancing and how it enhances the performance, scalability, and management of your AWS environment. To learn more, choose each of the following flashcards.
+
+
+Click to flipEfficient traffic distribution.
+
+
+Click to flipAutomatic scaling.
+
+
+Click to flipSimplified management.
+
+Routing methods
+
+To optimize traffic distribution, ELB uses several routing methods: Round Robin, Least Connections, IP Hash, and Least Response Time. These routing strategies work together for efficient traffic management and optimal application performance.
+
+
+Round Robin
+Distributes traffic evenly across all available servers in a cyclic manner.
+
+
+Least Connections
+Routes traffic to the server with the fewest active connections, maintaining a balanced load.
+
+
+IP Hash
+
+Uses the client’s IP address to consistently route traffic to the same server.
+
+
+Least Response Time
+Directs traffic to the server with the fastest response time, minimizing latency.
+
+Example: Elastic Load Balancing
+
+Let's look at an example to better understand how Elastic Load Balancing works in cloud computing. In the healthcare industry, particularly in hospitals and medical facilities that provide online appointment booking systems or patient portals, website traffic can vary greatly throughout the day.
+
+
+Initial setup
+
+Scaling up
+
+Load Balancing
+Low-demand period: At the beginning of the day, only a few patients are accessing the system to book appointments or view medical records. The existing web servers are sufficient to handle the low traffic. This matches the demand, with no need for additional resources at this point.
+
+end of tab
+By using Elastic Load Balancing and Auto Scaling, the healthcare industry can efficiently manage the varying levels of patient traffic to online services. This provides reliable access to medical portals even during high-demand periods.
+
+Test your skills
+
+How does Elastic Load Balancing (ELB) improve scalability in AWS?
+
+
+It manually adjusts the number of Amazon EC2 instances based on traffic.
+
+
+It automatically routes traffic to instances based on various routing methods.
+
+
+It directly increases the size of Amazon EC2 instances.
+
+
+It creates new Amazon EC2 instances for each request.
+
+SUBMIT
+
+
+TAKE AGAIN
+Which task does Elastic Load Balancing (ELB) perform?
+
+
+Automatically adjusts the number of Amazon EC2 instances to match demand.
+
+
+Distributes a workload across several Amazon EC2 instances.
+
+
+Removes unneeded Amazon EC2 instances when demand is low.
+
+
+Adds a second Amazon EC2 instance during an online store's popular sale.
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_9] Elastic Load Balancing Overview
+2026-01-31 15:56:33
+--------------------------------------------------------------------------------
+Directing Traffic with Elastic Load Balancing
+In this lesson, you will learn how to do the following:
+
+Describe the challenge of traffic distribution and scalability in AWS environments.
+
+Recognize the benefits of Elastic Load Balancing (ELB) in AWS.
+
+Explain the relationship between Amazon EC2 Auto Scaling and ELB in managing AWS resources.
+
+Spreading workloads improves the performance of your applications by preventing any single resource from having to handle the full workload on its own. In this lesson, you will learn how ELB simplifies traffic distribution and management for AWS applications.
+
+Play Video
+
+Transcript: Directing traffic with Elastic Load Balancing
+We solved the scaling problem with Amazon EC2 Auto Scaling. But now we've got a bit of a traffic problem, don't we? Let's take a look at the situation.
+
+Customers have three cashier options, but it seems like they are gravitating towards me, cause I’m just so darn adorable. Look, although I am flattered they noticed my new haircut, this is causing an uneven distribution of customers per line.
+
+Look over there. Morgan and Alan have no customers and are just taking selfies. Pfft, they should have gotten new haircuts, too. Anyway, in place of that, it would help a lot if we added a host to our coffee shop.
+
+The host stands at the entrance and directs customers to a specific line when they walk in. They also keep an eye on the cashiers and count the number of people in each line. Using this real-time information, they direct customers to the shortest line. This helps with evenly distributing customers and ensures they are served efficiently and quickly.
+
+The same idea applies to your AWS environment when trying to balance traffic across a group of EC2 instances. We don’t want idle EC2 instances, nor do we want overloaded ones. This is where we introduce the concept of a load balancer.
+
+A load balancer takes in requests and routes them to instances. There are many off-the-shelf load balancers that work great on AWS. So, if you have a favorite flavor that already does exactly what you want, feel free to keep using it. Just remember that you will have to manage, patch, upgrade, handle failover, and perform maintenance on it.
+
+However, if you would like AWS to handle all of that, and you just configure it once, check out Elastic Load Balancing, or ELB. ELB is designed to distribute network traffic to improve application scalability. The word elastic refers to its ability to scale up or down based on traffic, without adding to your hourly costs.
+
+ELB can manage both internal and external traffic to AWS. It offers different routing strategies to ensure efficient traffic management and thusly optimal application performance.
+
+Let’s dive into an example. For our coffee shop, we have a website for customers to order drinks. This website has various tiers for functionality, like the ordering tier, production tier, storage tier, and so forth.
+
+Let's look at the ordering tier and how it communicates with the production tier. Right now, every frontend instance is aware of every backend instance. If a new backend instance spins up, then it needs to let every frontend instance know that it can now accept traffic.
+
+This is complicated enough with half a dozen instances. Imagine if we have hundreds or thousands of instances in every tier. Keeping them in sync would be a huge undertaking.
+
+That’s why ELB is here to help. We can use it to manage the linking of the backend instances and the frontend instances. And because it’s Regional, it's a single URL that each frontend instance uses to direct to the backend instances. The ELB will then direct traffic to the backend instance that has the least outstanding requests.
+
+If the back-end needs to scale, it spins up a new instance. After that new instance is ready, it tells the ELB that it’s ready for traffic. And just like that, it gets to work.
+
+The frontend doesn’t even need to know what’s happening. It’s all done automatically, and it decouples the architecture so that each tier is considered its own entity that scales as it sees fit.
+
+
+Elastic Load Balancing
+
+Elastic Load Balancing (ELB) automatically distributes incoming application traffic across multiple resources, such as EC2 instances, to optimize performance and reliability. A load balancer serves as the single point of contact for all incoming web traffic to an Auto Scaling group. As the number of EC2 instances fluctuates in response to traffic demands, incoming requests are first directed to the load balancer. From there, the traffic is distributed evenly across the available instances.
+
+Although ELB and Amazon EC2 Auto Scaling are distinct services, they work in tandem to enhance application performance and ensure high availability. Together, they enable applications running on Amazon EC2 to scale effectively while maintaining consistent performance.
+
+Key takeaways: ELB benefits
+
+Let's review the main benefits of elastic load balancing and how it enhances the performance, scalability, and management of your AWS environment. To learn more, choose each of the following flashcards.
+
+
+Click to flipEfficient traffic distribution.
+
+
+Click to flipAutomatic scaling.
+
+
+Click to flipSimplified management.
+
+Routing methods
+
+To optimize traffic distribution, ELB uses several routing methods: Round Robin, Least Connections, IP Hash, and Least Response Time. These routing strategies work together for efficient traffic management and optimal application performance.
+
+
+Round Robin
+Distributes traffic evenly across all available servers in a cyclic manner.
+
+
+Least Connections
+Routes traffic to the server with the fewest active connections, maintaining a balanced load.
+
+
+IP Hash
+
+Uses the client’s IP address to consistently route traffic to the same server.
+
+
+Least Response Time
+Directs traffic to the server with the fastest response time, minimizing latency.
+
+Example: Elastic Load Balancing
+
+Let's look at an example to better understand how Elastic Load Balancing works in cloud computing. In the healthcare industry, particularly in hospitals and medical facilities that provide online appointment booking systems or patient portals, website traffic can vary greatly throughout the day.
+
+
+Initial setup
+
+Scaling up
+
+Load Balancing
+Low-demand period: At the beginning of the day, only a few patients are accessing the system to book appointments or view medical records. The existing web servers are sufficient to handle the low traffic. This matches the demand, with no need for additional resources at this point.
+
+end of tab
+By using Elastic Load Balancing and Auto Scaling, the healthcare industry can efficiently manage the varying levels of patient traffic to online services. This provides reliable access to medical portals even during high-demand periods.
+
+Test your skills
+
+How does Elastic Load Balancing (ELB) improve scalability in AWS?
+
+
+It manually adjusts the number of Amazon EC2 instances based on traffic.
+
+
+It automatically routes traffic to instances based on various routing methods.
+
+
+It directly increases the size of Amazon EC2 instances.
+
+
+It creates new Amazon EC2 instances for each request.
+
+SUBMIT
+
+
+TAKE AGAIN
+Which task does Elastic Load Balancing (ELB) perform?
+
+
+Automatically adjusts the number of Amazon EC2 instances to match demand.
+
+
+Distributes a workload across several Amazon EC2 instances.
+
+
+Removes unneeded Amazon EC2 instances when demand is low.
+
+
+Adds a second Amazon EC2 instance during an online store's popular sale.
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_10] Messaging and Queuing in AWS
+2026-01-31 16:02:11
+--------------------------------------------------------------------------------
+Messaging and Queuing
+In this lesson, you will learn how to do the following:
+
+Describe how Amazon Simple Queue Service (Amazon SQS) facilitates message queuing.
+
+Explain how Amazon Simple Notification Service (Amazon SNS) uses a publish-subscribe model to distribute messages.
+
+Identify the difference between tightly coupled and loosely coupled architectures.
+
+Explain how message queues help improve communication between components.
+
+Ever wonder how busy coffee shops keep everything running smoothly, even when the barista is on break or the cashier is overwhelmed? Well, the same principles apply to software architecture. In this lesson, you will look into how messaging and queuing help prevent slowdowns and failures.
+
+Play Video
+
+Transcript: Messaging and Queuing
+Alan: Oh, sorry. I was just ordering a cup of coffee. Let's talk about messaging and queuing. In the coffee shop, there are cashiers taking orders from the customers and baristas making the orders.
+
+Currently, the cashier takes the order, writes it down with a pen and paper, and delivers this order to the barista. The barista then takes the paper and makes the order. When the next order comes in, the process repeats. This works great, as long as both the cashier and the barista are in sync.
+
+But what happens if the cashier took the order, turned to pass it to the barista, and the barista was on break or busy with another order? Well, that cashier is stuck until the barista is ready to take the order. And, at a certain point, the order will probably be dropped so the cashier can go serve the next customer.
+
+You can see how this is a flawed process, because as soon as either the cashier or barista is out of sync, the process will degrade. This will cause slowdowns in receiving orders—and failures to complete orders at all. A much better process would be to introduce some sort of buffer or queue into the system. Instead of handing the order directly to the barista, the cashier would post the order to an order board.
+
+This idea of placing messages into a buffer is called messaging and queuing. Just as our cashier sends orders to the barista, applications send messages to each other to communicate. If applications communicate directly, like our cashier and barista previously, that is called being tightly coupled. A hallmark trait of a tightly coupled architecture is this: If a single component fails or changes, it causes issues for the other components or even the whole system.
+
+For example, Application A is sending messages directly to Application B. If Application B has a failure and cannot accept those messages, Application A will begin to see errors, as well. This is an architecture where if one component fails, it is isolated and therefore won't cause cascading failures throughout the whole system. If we designed the application to use a more loosely coupled architecture, it could look like this.
+
+Just like our cashier and barista, we introduced a buffer between the two. In this case, we introduced a message queue. Messages are sent into the queue by Application A and are processed by Application B. If Application B fails, Application A doesn't experience any disruption. Messages being sent can still be sent into the queue and will remain there until they are eventually processed.
+
+This is loosely coupled. This is what we strive to achieve with architectures on AWS. And this brings me to two AWS services: Amazon Simple Queue Service, or Amazon SQS, and Amazon Simple Notification Service, or Amazon SNS.
+
+SQS makes it possible for you to send, store, and receive messages between software components at any volume. This is done without losing messages or requiring other message consumers to be available.
+
+Think of messages as our coffee orders and the order board as an SQS queue. Messages have the person's name, coffee order, and the time they ordered. The data within a message is called a payload. SQS queues are where the messages are placed until they are processed. These scale automatically, are reliable, and are simple to configure and use.
+
+SNS is similar as it also sends messages to services, but it has a big distinction: Sent SNS messages aren't held for pickup until the processing service has a moment to get to them. Instead, SNS messages need a response right now. If SQS is the coffee orders board, SNS is the barista yelling out, "One Rudy's Rhubarb Refresher, to go!"
+
+Rudy: Trademark.
+
+Alan: Additionally, SNS can be used to fan out notifications to end users using mobile push, SMS, and email. Taking this back to our coffee shop, we could send out a notification when a customer's order is ready. This could be a simple text message.
+
+In fact, it looks like my coffee is ready!
+
+Key takeaways: Decoupling services
+
+In modern application development, reliability and resilience are important. One effective way to achieve this is by adopting a service-oriented approach.
+
+Monolithic applications
+Applications consist of multiple components that work together to transmit data, fulfill requests, and keep the application running smoothly. In a traditional approach to application architecture, the components—such as database logic, web application servers, user interfaces, and business logic—are tightly coupled. This means that if one component fails, it can cause the failure of other components, potentially bringing down the entire application.
+
+
+Microservices architecture
+To improve application availability and resilience, you can adopt a microservices architecture. In this approach, application components are loosely coupled, meaning that if one component fails, the others continue to function normally. The communication between components remains intact, and the failure of a single component does not impact the entire system. This design promotes greater flexibility and reliability in the application.
+
+
+Supporting scalable and reliable cloud communication
+
+Amazon EventBridge, Amazon SNS, and Amazon SQS are AWS services that help different parts of an application communicate effectively in the cloud. These services support building event-driven and message-based systems. Together, they help create scalable, reliable applications that can handle high traffic and can enhance communication between components.
+
+
+EventBridge
+
+EventBridge is a serverless service that helps connect different parts of an application using events, helping to build scalable, event-driven systems. With EventBridge, you route events from sources like custom apps, AWS services, and third-party software to other applications. EventBridge simplifies the process of receiving, filtering, transforming, and delivering events, so you can quickly build reliable applications.
+
+Example: EventBridge
+
+Customers use an online food delivery service to order meals from local restaurants through a mobile app. When a customer places an order, several steps need to happen simultaneously. To learn more about these steps, choose each of the four numbered markers.
+
+
+
+
+
+
+How EventBridge helps: EventBridge can route events, like order placed or payment completed, to the relevant services (payment, restaurant, inventory, and delivery). It can handle high volumes of events during peak times, making sure each service works independently. Even if one service fails, EventBridge will store the event and process it as soon as the service is available again. EventBridge helps provide a smooth and reliable operation across the entire system.
+
+
+Amazon SQS
+
+Amazon SQS is a message queuing service that facilitates reliable communication between software components. It can send, store, and receive messages at any scale, making sure messages are not lost and that other services don't need to be available for processing. In Amazon SQS, an application places messages into a queue, and a user or service retrieves the message, processes it, and then removes it from the queue.
+
+Example: Amazon SQS
+
+As customer support teams grow and the volume of issues increases, traditional workflows can struggle to keep up. Let's consider how a customer support team might tackle this challenge.
+
+
+Scenario
+
+Challenge
+
+Solution
+A customer support team consists of a support agent and a technical specialist. The support agent is responsible for receiving customer issues, and the technical specialist works on resolving them. This process works well as long as both the agent and specialist are available and coordinated.
+
+End of tab.
+
+Amazon SNS
+
+Amazon SNS is a publish-subscribe service that publishers use to send messages to subscribers through SNS topics. In Amazon SNS, subscribers can include web servers, email addresses, Lambda functions, and various other endpoints. You will learn about Lambda in more detail later.
+
+Example: Amazon SNS
+
+A company that sells a variety of products is currently sending a single email to all customers with updates on various topics, such as new products, special offers, and upcoming events. Although this method worked initially, customers want to receive only the updates they’re interested in. The current email update is causing customer dissatisfaction and lower engagement.
+
+To learn more about the solution, choose each of the three numbered markers.
+
+
+
+
+
+Test your skills
+
+What BEST describes the key difference between tightly coupled and loosely coupled architectures?
+
+
+In a tightly coupled architecture, components are tightly connected and dependent on each other, whereas in a loosely coupled architecture, components can operate independently.
+
+
+Tightly coupled systems are more flexible in adding new components, whereas loosely coupled systems require careful configuration to add new components.
+
+
+Tightly coupled architectures are designed for scalability, whereas loosely coupled systems focus on maintaining high availability.
+
+
+Loosely coupled systems require components to share data directly with each other, whereas tightly coupled systems store data in a central repository.
+
+SUBMIT
+
+
+
+TAKE AGAIN
+In a banking system, when customers transfer money, the transaction details are sent from the transaction service to a fraud detection service for verification. Sometimes, the fraud detection service is temporarily down.
+
+What is the MAIN advantage of using Amazon Simple Queue Service (Amazon SQS) in this banking scenario?
+
+
+It guarantees immediate approval of transactions.
+
+
+It stores transaction details until the fraud detection service can process them, even if the service is down.
+
+
+It speeds up transaction processing by avoiding the use of a buffer.
+
+
+It forces the transaction service and fraud detection service to depend on each other directly.
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_11] Amazon EC2 and Cloud Scaling
+2026-01-31 16:28:17
+--------------------------------------------------------------------------------
+In these lessons about compute, you learned how Amazon EC2 and cloud resources help scale applications. You gained knowledge of EC2 instance types, pricing options, and how to choose the best instance types for your unique business needs. You also became familiar with using AWS tools and services like Elastic Load Balancing, Amazon EC2 Auto Scaling, Amazon SQS, and Amazon SNS to manage traffic and communication.
+
+
+Resources
+
+To learn more about the material covered in this module, choose the resource links contained in the following table.
+
+Resource link
+
+Description
+
+Compute on AWS(opens in a new tab)
+
+This resource provides an overview of the different cloud computing services offered by AWS.
+
+AWS Compute Blog(opens in a new tab)
+
+This blog provides updates, tutorials, and best practices for using AWS compute services, such as Amazon EC2, AWS Lambda, Amazon ECS, and more.
+
+AWS Compute Services(opens in a new tab)
+
+This reference provides an in-depth introduction to the compute services available within the AWS Cloud.
+
+Hands-On Tutorials: Compute(opens in a new tab)
+
+This resource provides practical, step-by-step tutorials designed to help users gain hands-on experience with AWS compute services. It is ideal for beginners and those new to cloud computing.
+
+Amazon EC2(opens in a new tab)
+
+Amazon EC2 runs virtual servers in the cloud with flexible computing capacity.
+
+Amazon EC2 Instance Types(opens in a new tab)
+
+This guide provides detailed information about the different types of EC2 instances, including their specifications, capabilities, and use cases. It helps you choose the right instance type based on your workload needs, such as compute, memory, and storage requirements.
+
+Amazon EC2 Pricing(opens in a new tab)
+
+This guide explains the different pricing models for EC2 instances, including On-Demand, Reserved Instances, and Spot Instances, so you can choose the best option based on your usage.
+
+Amazon EC2 Auto Scaling(opens in a new tab)
+
+Amazon EC2 Auto Scaling automatically adjusts instance count based on demand for high availability and cost-efficiency.
+
+Elastic Load Balancing(opens in a new tab)
+
+Elastic Load Balancing automatically distributes incoming application traffic across multiple EC2 instances for high availability and fault tolerance.
+
+Amazon Simple Notification Service(opens in a new tab)
+
+Amazon SNS is a messaging service for sending notifications to users or other applications through SMS, email, or mobile push notifications.
+
+Amazon Simple Queue Service(opens in a new tab)
+
+Amazon SQS decouples application components through message queuing, storing and processing messages reliably.
+
+Congratulations on completing this module!  
+
+Choose the Return to course details link at the top of this page to continue with the next module.
+--------------------------------------------------------------------------------
+
+
+[NOTE_12] Introduction to Serverless Computing
+2026-01-31 17:05:28
+--------------------------------------------------------------------------------
+Introduction to Serverless Computing
+
+With serverless computing, you run applications without managing the underlying infrastructure. In the following lessons, you learn how to take full advantage of it with powerful compute services. You explore AWS Lambda, a serverless solution that automatically handles scaling, availability, and maintenance. You also discover services like Amazon Elastic Container Service (Amazon ECS), Amazon Elastic Kubernetes Service (Amazon EKS), and AWS Elastic Beanstalk, which make container management and application deployment more manageable. After completing these lessons, you will be ready to choose the best one for your needs.
+
+In this lesson, you will learn how to do the following:
+
+Describe the differences between unmanaged, managed, and serverless compute services in AWS.
+
+Describe the customer and AWS responsibilities regarding serverless computing.
+
+In these next lessons, you will learn about AWS compute services and the different levels of control they offer. You’ve seen how Amazon Elastic Compute Cloud (Amazon EC2), an unmanaged service, gives you full control over virtual machines. Now, you will learn about managed and serverless services that reduce infrastructure management so you can focus on your application.
+
+Play Video
+
+Transcript: Exploring AWS Compute Options
+Welcome back! At this point, you've learned how to use Amazon EC2 to provision compute resources in the AWS Cloud, and that’s great! EC2 is one of the foundational services in AWS and understanding how to use it is key.
+
+To quickly recap, EC2 instances are virtual machines that you can provision on AWS. EC2 is great for all sorts of use cases, from running basic web servers to high performance computing workloads, and everything in between. EC2 offers a high degree of control when it comes to your instances, but it also requires that you manage that fleet of instances over time.
+
+EC2 is an unmanaged service, meaning that you have control over tasks like patching, scaling, and managing the operating system, while AWS manages the underlying infrastructure. Think back to the Shared Responsibility Model, where AWS is responsible for the security of the cloud, and you are responsible for security in the cloud.
+
+On the other hand, AWS also offers managed services. Managed services shift more operational responsibilities to AWS—so you can focus on building your application and less on managing infrastructure. To help illustrate this, let’s relate it back to the coffee shop.
+
+Unmanaged services are like those high-end, fully customizable espresso machines. You get to choose the beans, grind them up to your desired consistency, tinker with every knob and lever to your liking, so you get that perfect cup of coffee. It’s all about control. And it’s a coffee enthusiast’s dream! But it’s also more work because you’re on the hook for all the upkeep and maintenance for the machine as well.
+
+Managed services, on the other hand, are more about convenience. Think of them like a coffee maker that uses pods. You just pop in a pod, choose your settings, press a button, and within moments, you’ve got a cup of coffee—no fuss, no hassle. Sure, it might not be as customizable as the espresso machine, but it saves you a lot of time and effort. What you choose really depends on what you’re looking for.
+
+AWS services span a range from unmanaged to managed, offering you varying degrees of control and convenience. Some services, like EC2, allow you to fine-tune everything. You’re in charge of all configurations and management.
+
+Then, there are managed services. Some examples of managed services that you've already learned about are ELB, SNS, and SQS. For managed services, you configure the service to meet your requirements, and then AWS makes sure it runs smoothly over time, with no server management required on your part. This idea of not managing any underlying infrastructure led to the rise of serverless computing.
+
+Serverless means that you can’t actually see or access the underlying infrastructure or instances that are hosting your application. Instead, all the management of the underlying environment from a provisioning, scaling, high availability, and maintenance perspective are handled for you. All you need to do is focus on your application.
+
+With a new understanding of terms like unmanaged, managed, and serverless, we’re going to explore some of the other compute services that AWS has to offer. There are many services available, built for different use cases, and we will be covering some of these in the upcoming lessons.
+
+AWS offers all these different compute services to give you options that cater to various workloads, requirements, and levels of management. The key is to recognize what your specific application needs are and choose a service that provides the right balance of customization and ease of use.
+
+Sometimes you’ll want to be the barista, brewing everything from scratch, and other times you just need that quick cup of coffee without all the fuss.
+
+Key takeaways: Unmanaged and managed services
+
+AWS offers both unmanaged and managed services to suit different levels of control and responsibility. By understanding this model, you will know which tasks AWS manages and which you are responsible for, helping you secure and manage your cloud resources effectively.
+
+Unmanaged and managed services
+With unmanaged compute services like Amazon EC2, AWS takes care of the underlying physical infrastructure, but you're responsible for setting up, securing, and maintaining the operating system, network configurations, and applications on your instances. Managed services, on the other hand, reduce the amount of infrastructure you need to manage. While AWS handles much of the operational overhead, you might still need to perform some provisioning or configuration depending on the service.
+
+Using managed services shows a decrease in customer responsibility.
+
+Fully-managed services
+Fully-managed services—like serverless ones—take abstraction even further, eliminating the need to provision or manage any servers at all. The underlying infrastructure is fully managed by AWS, so you can focus entirely on writing and deploying code. Later in this module, you will explore Lambda. Lambda is a serverless compute service where AWS handles the infrastructure, scaling, and availability, while you remain responsible for securing and managing your application code.
+--------------------------------------------------------------------------------
+
+
+[NOTE_13] AWS Service Management Levels
+2026-01-31 17:19:23
+--------------------------------------------------------------------------------
+With unmanaged services like Amazon EC2, you set up and manage everything: the operating system, security updates, and network settings. AWS only takes care of the physical hardware. Managed services handle most of the infrastructure for you, but you still need to set up things like deployment options, scaling, and environment settings. With fully managed services like AWS Lambda, you don’t manage any servers at all. You upload your code, and AWS takes care of the rest, including infrastructure, scaling, and availability.
+--------------------------------------------------------------------------------
+
+
+[NOTE_14] Containers and Orchestration on AWS
+2026-01-31 21:22:01
+--------------------------------------------------------------------------------
+Containers and Orchestration on AWS
+In this lesson, you will learn how to do the following:
+
+Describe how containers create a consistent and portable runtime environment across different systems.
+
+Explain how Amazon Elastic Container Registry (Amazon ECR) is used to store, manage, and version container images.
+
+Identify how Amazon ECS and Amazon EKS orchestrate containers to deploy, scale, and manage applications.
+
+Describe how AWS Fargate runs containers without the need to provision or manage servers.
+
+In this lesson, you will learn about containers—a powerful way to package and run applications consistently across different environments, with the flexibility to scale and deploy efficiently on AWS.
+
+Play Video
+
+Transcript: Containers and Orchestration on AWS
+So far, we've talked about EC2 and Lambda, and there's another compute service we haven't talked about. Let's talk about containers!
+
+Imagine you’re a developer trying to deploy an application that’s worked perfectly on your computer but fails everywhere else. That’s frustrating, right? You might even have heard developers trying to debug this issue and saying to each other, "It works on my machine."
+
+Containers solve this portability problem by providing a consistent environment that can be replicated anywhere. That’s what containers do. They package everything your application needs to run—code, runtime, dependencies, configuration—into a single, portable unit. This creates a consistent environment, isolating your application from the underlying system and making it convenient to deploy and scale your application anywhere. Containers also provide benefits like faster start times and improved resource efficiency.
+
+Now that you understand what containers are, let’s talk about hosting them on AWS. You can manage containers on your own, where you place containers on top of a cluster of EC2 instances, but it’s a lot of work. You’d have to deal with monitoring the health of the containers, starting and stopping them when needed, updating them, and managing the networking for them, and more. You can manage it, of course, but it would be complicated and easy to mess up. That’s where container orchestration services come in.
+
+Container orchestration services manage the lifecycle of containers, including starting, stopping, and running them across a cluster. These orchestration services automatically scale containers out when traffic increases—and scale back in when things calm down. This way, your application can handle spikes in demand without breaking a sweat. They also handle recovery from failure, monitoring, and updates, saving you tons of time and effort.
+
+On AWS, we have two main container orchestration options: Amazon ECS and Amazon EKS. Let’s break them down.
+
+Amazon ECS stands for Amazon Elastic Container Service. It’s ideal if you want something streamlined and integrated, but you can still define your application’s container images and resources, such as EC2 instance types and load balancers. ECS automatically manages the containers and their infrastructure based on the parameters you set.
+
+On the other hand, you have Amazon EKS, or Amazon Elastic Kubernetes Service. Kubernetes is an open source platform that automates containerized application deployment, scaling, and management. EKS makes it convenient to run Kubernetes clusters on AWS. It offers a lot of control and flexibility, especially for large-scale or hybrid deployments.
+
+Now, orchestration services need somewhere to get their containers from. That’s where Amazon Elastic Container Registry, or Amazon ECR, comes in. ECR is a fully managed container registry that stores your container images. You build your containers that have your application and all of its dependencies bundled together. From there, a container orchestration tool can pull the container image and deploy it.
+
+So, you’ve got your container image, and you've chosen an orchestration service. Now, let’s focus on where your containers will actually run. AWS offers two main options for this: Amazon EC2 and AWS Fargate.
+
+With EC2, you manage the virtual machines that run your containers. With this option, you have full control, but you need to manage the underlying infrastructure.
+
+On the other hand, Fargate is serverless and offers efficiency and convenience. With Fargate, AWS manages the servers, and you only need to worry about your containers. No need to manage a fleet for these containers to run on.
+
+Alright, let’s walk through an example of how all these pieces fit together. First, you’ll upload your container images to ECR, which is where your images get stored securely and are ready to be used. After that, you’ll pick an orchestration service based on what you need, either ECS or EKS. Lastly, you’ll choose your compute option, either EC2 or Fargate.
+
+With AWS, deploying and managing containers is convenient, efficient, and scalable—perfect for keeping your focus on where it matters most: on your application.
+
+Key takeaways: Solving deployment challenges
+
+Containers provide a reliable way to package your application’s code and dependencies into a single, portable unit, making them ideal for workflows that require high security, reliability, and scalability.
+
+Containers and VMs
+A container packages your application with everything it needs to run, so it works the same on any computer. This helps to move, update, and manage. Containers are faster and lighter than virtual machines (VMs) because they share the host computer’s operating system. VMs use a hypervisor to run full, separate operating systems, which makes them less resource-efficient and have longer startup times.
+
+Containers package apps to run consistently across systems and are faster, lighter, and more efficient than virtual machines.
+
+Deployment consistency with containers
+When a developer’s environment differs from staging or production, deployments can fail and become difficult to debug. Containers solve this by keeping the application’s environment consistent everywhere, making deployments smoother and assisting troubleshooting.
+
+Containers ensure consistent environments, reducing deployment failures and making debugging easier across all stages.
+
+Scaling containers with orchestration
+As containerized applications scale, managing them becomes more complex. A setup that began with a few containers on a single host can quickly grow into hundreds or thousands of containers across multiple hosts. At that scale, manually handling container lifecycle, monitoring, and general operations becomes unsustainable. This is where orchestration tools come in. They automate deployment, scaling, and management to keep everything running smoothly.
+
+Orchestration tools automate scaling and management of many containers, making large-scale app operations efficient and reliable.
+
+AWS container services
+
+AWS has a set of tools for managing containers that fits into three categories: orchestration, registry, and compute.
+
+
+Amazon ECS
+
+Amazon Elastic Container Service (Amazon ECS) is a scalable container orchestration service for running and managing containers on AWS, like Docker containers. Docker is a software platform for building, testing, and deploying applications quickly.
+
+Amazon ECS launch types
+
+Amazon ECS with Amazon EC2 is ideal for small-to-medium businesses that need full control over infrastructure. Suitable for custom applications requiring specific hardware or networking configurations, with the flexibility of Amazon EC2 and the simplicity of Amazon ECS.
+
+Amazon ECS with AWS Fargate is perfect for startups or small teams building web applications with variable traffic. It's a serverless option—no server management required—so teams can focus on development while Amazon ECS handles scaling and orchestration.
+
+
+Amazon EKS
+
+Amazon Elastic Kubernetes Service (Amazon EKS) is a fully managed service for running Kubernetes on AWS. It simplifies deploying, managing, and scaling containerized applications using open-source Kubernetes, with ongoing support and updates from the broader community.
+
+Amazon EKS launch types
+
+Amazon EKS with Amazon EC2: This is best for enterprises needing full control over infrastructure. It offers deep customization of EC2 instances alongside Kubernetes scalability—ideal for complex, large-scale workloads.
+
+Amazon EKS with AWS Fargate: This is great for teams wanting Kubernetes flexibility without managing servers. It combines Kubernetes power with serverless simplicity, helping to scale applications quickly across various use cases.
+
+
+Amazon ECR
+
+Amazon Elastic Container Registry (Amazon ECR) is where you can store, manage, and deploy container images. It supports container images that follow the Open Container Initiative (OCI) standards. You can push, pull, and manage images in your Amazon ECR repositories using standard container tooling and command line interfaces (CLIs).
+
+
+Fargate
+
+AWS Fargate is a serverless compute engine for containers. It works with both Amazon ECS and Amazon EKS. Fargate is a container hosting platform, unlike Amazon ECS and Amazon EKS, which are both container orchestration services.
+
+When using Fargate, you do not need to provision or manage servers. Fargate manages your server infrastructure for you. You can focus more on innovating and developing your applications, and you pay only for the resources that are required to run your containers.
+--------------------------------------------------------------------------------
+
+
+[NOTE_15] Application Deployment and ECS Simplification
+2026-01-31 21:31:44
+--------------------------------------------------------------------------------
+Great questions! Let's break this down step by step.
+
+Deployment of an application refers to the process of making your application available for users to access and use. Think of it like setting up a new restaurant. You don’t just cook the food; you also have to prepare the space, arrange the tables, hire staff, and ensure everything runs smoothly when customers arrive. In the tech world, deployment includes preparing the environment (like servers and networking) and ensuring that your application runs correctly there.
+
+How does ECS simplify deployment? Imagine having a personal assistant who manages all the tasks needed to open your restaurant. ECS takes care of the heavy lifting for you—automatically starting containers, ensuring they have the right resources, scaling them up or down based on traffic, and monitoring their health. This means that instead of spending your time managing infrastructure (like servers), you can focus on improving your application and ensuring a great user experience.
+
+Now, let’s tackle orchestration. In simple terms, orchestration is like a conductor leading an orchestra—making sure all the musicians (or containers, in this case) play in harmony. It manages how different parts of your application work together, ensuring they start, stop, and scale properly. So instead of worrying about each individual container, you let the orchestration service handle it all seamlessly.
+
+When we say to "focus on development, not infrastructure," we're talking about the underlying systems that support your application—like servers, networking, and storage. With ECS (or similar services), you can leave those details to the platform, allowing you to concentrate on writing code and enhancing your application instead of wrestling with server management.
+
+In summary: Deployment makes your application available to users, ECS simplifies this by managing the infrastructure for you, and orchestration ensures all parts of your application work together smoothly.
+--------------------------------------------------------------------------------
+
+
+[NOTE_16] Elastic Beanstalk Resource Provisioning
+2026-01-31 23:05:22
+--------------------------------------------------------------------------------
+Great question! When we say "provisions resources," think of it like setting up a stage for a play. Before the actors can perform, someone needs to get the lights, sound equipment, and props in place. In the context of Elastic Beanstalk, when you upload your application code, the service takes care of all the behind-the-scenes work, just like a stage manager would.
+
+So, in more technical terms, "provisioning resources" means Elastic Beanstalk automatically sets up the necessary computing power (like EC2 instances), storage, networking, and any other infrastructure components needed to run your application. Instead of you needing to figure out how many servers to set up or how to connect them, Elastic Beanstalk does all that work for you based on the requirements of your app. 
+
+In summary, when Elastic Beanstalk provisions resources, it automatically prepares everything your app needs to run smoothly, just like preparing a stage for a successful performance.
+--------------------------------------------------------------------------------
+
+
+[NOTE_17] Overview of AWS Additional Compute Services
+2026-01-31 23:09:28
+--------------------------------------------------------------------------------
+Additional Compute Services
+In this lesson, you will learn how to do the following:
+
+Describe how Elastic Beanstalk streamlines environment provisioning and management.
+
+Explain how AWS Batch manages large-scale computing tasks and automatically adjusts resources based on demand.
+
+Identify how Amazon Lightsail streamlines web application setup and management without the need for complex infrastructure.
+
+Describe how AWS Outposts extends AWS services to on-premises environments, supporting hybrid cloud architectures.
+
+AWS offers a range of purpose-built services designed to streamline specific use cases—from application deployment and data processing to web hosting and hybrid cloud setups. Let’s take a quick tour of some of these powerful solutions.
+
+Play Video
+
+Transcript: Additional Compute Services
+So far, we've covered compute options like EC2, Lambda, and container services like ECS. But wait…there's more! There are many purpose-built services you can use for specific use cases that can help you achieve your goals. Let’s take a quick look at some of them!
+
+First up is AWS Elastic Beanstalk. This is a service that makes it easier to deploy and manage applications in EC2. Instead of building out the needed infrastructure, like the network, EC2 instances, scaling, and elastic load balancers by yourself, you can provide your application code and desired configurations to the Elastic Beanstalk service. Elastic Beanstalk then takes that information and builds out your environment for you. Elastic Beanstalk also makes it easy to save environment configurations, so they can be deployed again. You won’t need to provision and manage all of these pieces separately, and you’ll still have visibility and control of the underlying resources.
+
+Next up, let's talk about AWS Batch, a compute service designed for heavy-duty tasks like processing massive datasets, running simulations, or performing complex calculations. AWS Batch takes care of the infrastructure management for you. You won’t need to worry about provisioning servers, scaling resources, or managing infrastructure. AWS Batch handles all of that, allowing you to focus on the important tasks like building your application or running your analysis. The service also scales automatically, distributing tasks across a fleet of compute resources like EC2 instances.
+
+Then there's Amazon Lightsail, which simplifies web application hosting by giving you a relatively easy, cost-effective solution for running specific types of applications and websites. It takes care of a lot of the complexity that comes with traditional web application hosting, and it's a great option if you want something quick and easy to manage!
+
+Finally, let’s talk about one more unique, purpose-built AWS service called AWS Outposts. This one is designed for organizations that need a hybrid-cloud solution. If you want to leverage the power of AWS while keeping some of your infrastructure on premises, Outposts is the answer. Outposts extends AWS services to your on-premises data center, giving you a consistent experience across both environments. You get to run AWS services locally, while still benefiting from cloud computing. This is perfect for meeting specific needs, like low latency, data residency, or integration for hybrid deployments.
+
+And there you have it! From Elastic Beanstalk to Outposts. Each service is designed to handle specific tasks, so remember that as you learn about other services and their use cases.
+
+Additional compute services
+
+AWS offers purpose-built services for specific needs, such as streamlining web application deployment, managing batch workloads, providing virtual servers, and extending cloud infrastructure to on-premises data centers.
+
+
+Elastic Beanstalk
+
+Elastic Beanstalk is a fully managed service that streamlines the deployment, management, and scaling of web applications. Developers can upload their code, and Elastic Beanstalk automatically handles the provisioning of infrastructure, scaling, load balancing, and application health monitoring. It supports various programming languages and frameworks, such as Java, .NET, Python, Node.js, Docker, and more. It provides full control over the underlying AWS resources while automating many operational tasks.
+
+Good for: Deploying and managing web applications, RESTful APIs, mobile backend services, and microservices architectures, with automated scaling and simplified infrastructure management
+
+
+AWS Batch
+
+AWS Batch is a fully managed service that you can use to run batch computing workloads on AWS. It automatically schedules, manages, and scales compute resources for batch jobs, optimizing resource allocation based on job requirements.
+
+Good for: Processing large-scale, parallel workloads in areas like scientific computing, financial risk analysis, media transcoding, big data processing, machine learning training, and genomics research
+
+
+Lightsail
+
+Amazon Lightsail is a cloud service offering virtual private servers (VPSs), storage, databases, and networking at a predictable monthly price. It’s ideal for small businesses, basic workloads, and developers seeking a straightforward AWS experience without the complexity of the full AWS Management Console.
+
+Good for: Basic web applications, low-traffic websites, development and testing environments, small business websites, blogs, and learning cloud services
+
+
+Outposts
+
+AWS Outposts is a fully managed hybrid cloud solution that extends AWS infrastructure and services to on-premises data centers. It provides a consistent experience between on premises and the AWS Cloud, offering compute, storage, and networking components.
+
+Good for: Low-latency applications, data processing in remote locations, migrating and modernizing legacy applications, and meeting regulatory compliance or data residency requirements
+--------------------------------------------------------------------------------
+
+
+[NOTE_18] AWS Elastic Beanstalk Overview
+2026-01-31 23:16:18
+--------------------------------------------------------------------------------
+AWS Elastic Beanstalk is a platform-as-a-service (PaaS) that simplifies the deployment and management of applications in the cloud. It interacts with Amazon Elastic Container Registry (ECR) and Amazon Elastic Kubernetes Service (EKS) to enhance application deployment and scalability. ECR serves as a managed container image registry, allowing developers to store, manage, and deploy Docker container images that Elastic Beanstalk can pull to run applications. Meanwhile, EKS provides a managed Kubernetes service, enabling users to orchestrate containerized applications at scale. When deploying a containerized application using Elastic Beanstalk, you can configure it to pull images directly from ECR, ensuring that your application runs the latest version of your container. Additionally, if your application requires more complex orchestration, you can integrate Elastic Beanstalk with EKS, allowing you to leverage Kubernetes features while still benefiting from Elastic Beanstalk's simplified deployment process. This integration streamlines the development workflow, making it easier for developers to focus on building applications rather than managing infrastructure.
+--------------------------------------------------------------------------------
+
+
+[NOTE_19] Service for Container Management
+2026-01-31 23:40:46
+--------------------------------------------------------------------------------
+A development team at a travel company has stored their hotel booking system’s container image in Amazon Elastic Container Registry (Amazon ECR) and is ready to deploy it. They need a service that can automatically start and stop containers based on traffic, scale up or down with demand, and monitor the health of the system.
+
+Which service does the team need next?
+--------------------------------------------------------------------------------
+
+
+[NOTE_20] AWS Global Infrastructure Basics
+2026-02-01 00:01:42
+--------------------------------------------------------------------------------
+You've been introduced to some foundational elements of the AWS Global Infrastructure, such as AWS Regions and Availability Zones (AZs). In the following lessons, you will learn even more about AWS infrastructure. Concepts covered in these lessons include how to choose a Region, the value of edge locations, and how to use services such as AWS CloudFormation to streamline and automate deployment. In addition to achieving high availability, these components of the AWS Global Infrastructure can help your business achieve benefits like elasticity and agility.
+
+In this lesson, you will learn how to do the following:
+
+Review basic components of the AWS Global Infrastructure.
+
+In the following video, you learn how our coffee shop analogy can represent elements of the AWS Global Infrastructure.
+--------------------------------------------------------------------------------
+
+
+[NOTE_21] Introduction to AWS Global Infrastructure
+2026-02-01 00:06:02
+--------------------------------------------------------------------------------
+Introduction to Going Global
+
+You've been introduced to some foundational elements of the AWS Global Infrastructure, such as AWS Regions and Availability Zones (AZs). In the following lessons, you will learn even more about AWS infrastructure. Concepts covered in these lessons include how to choose a Region, the value of edge locations, and how to use services such as AWS CloudFormation to streamline and automate deployment. In addition to achieving high availability, these components of the AWS Global Infrastructure can help your business achieve benefits like elasticity and agility.
+
+In this lesson, you will learn how to do the following:
+
+Review basic components of the AWS Global Infrastructure.
+
+In the following video, you learn how our coffee shop analogy can represent elements of the AWS Global Infrastructure.
+
+Play Video
+Play
+Remaining Time -2:26
+1x
+Playback Rate 1x
+
+Captions
+
+Picture-in-Picture
+
+Fullscreen
+
+Mute
+
+Transcript: Introduction to Going Global
+The coffee shop is thriving. In fact, the shop has gained quite a following, and now we’re thinking it’s time to expand. That’s right. Breaking news: the coffee shop is going international.
+
+As the shop plans its expansion, there are a few considerations to keep in mind. First, we need to decide where to open new locations. We want to reach coffee lovers in different parts of the world, but we also need to consider factors like local demand, regulations, and costs. This is like how in AWS, when you are expanding globally, there are a number of factors to consider when selecting AWS Regions. In these upcoming lessons, you'll learn all about what goes into choosing a Region or set of Regions.
+
+The next step of our coffee shop expansion plan is that we want to open some lightweight, smaller footprint versions of our shop called coffee carts. We'll set these up in places like farmers markets, airports, and event venues. They won't serve every drink or item on the menu, but they can provide the most popular items quickly and efficiently. These coffee carts are similar to how AWS edge locations work. Edge locations offer fast, localized delivery of the most frequently accessed content. They cache things like images, videos, and other assets and resources, allowing users to get the content they need quickly, without waiting for it to be retrieved from a central location. You'll learn more about these soon.
+
+Finally, our shop wants to standardize and automate processes so we can keep our customer satisfaction consistent. No matter which shop or coffee cart the customer visits, we want them to get the same great experience. We’ll train staff on the same recipes and use smart coffee machines that can be programmed remotely and replicated to all the different locations, making sure that a cappuccino in Stockholm tastes just like one in Seattle. Similarly, AWS has infrastructure in place to help businesses scale responsibly and consistently. In this section, you'll explore how to achieve consistent deployments across environments and global deployments using infrastructure as code, or IaC, specifically focusing on AWS CloudFormation.
+
+By the end of this section, you'll have a thorough understanding of the ins and outs of AWS Global Infrastructure, helping you to achieve robust, scalable, and globally available applications. So, grab your cup of coffee, and let's dive in.
+
+Going global with AWS infrastructure
+
+The coffee shop is expanding to global locations. Navigate through the following content to review how elements of our coffee shop expansion represent different parts of the AWS Global Infrastructure.
+
+How to choose a Region or set of Regions
+If we were to expand our coffee shop by opening new locations, there would be multiple things to consider, like customer demand and development cost. Similarly, you have several factors to consider when selecting a Region or set of Regions for your real-life resources.
+
+
+
+AWS edge locations
+Like our coffee franchise could expand with smaller versions of the shop such as mobile coffee carts, AWS has smaller footprint facilities called edge locations. Edge locations cache items like images, videos, and other resources, so that users can access the content they need with lower latency.
+
+
+
+Infrastructure as code and CloudFormation
+Another important consideration of a coffee shop expansion would be to maintain a consistent product from location to location. AWS has services, such as CloudFormation, that you can use to help automate the deployment of your cloud resources. These services use infrastructure as code, or IaC, helping you achieve a consistent, reliable set up each time your business grows.
+--------------------------------------------------------------------------------
+
+
+[NOTE_22] Selecting AWS Regions for Deployment
+2026-02-01 00:12:03
+--------------------------------------------------------------------------------
+Choosing AWS Regions
+In this lesson, you will learn how to do the following:
+
+Describe how to choose a Region.
+
+By this point, you are familiar with some basics of AWS Global Infrastructure including Regions. But how do you select the right Region for your specific business needs? In this lesson, you learn about considerations for selecting a Region or set of Regions.
+
+Play Video
+Play
+Remaining Time -3:15
+1x
+Playback Rate 1x
+
+Captions
+
+Picture-in-Picture
+
+Fullscreen
+
+Mute
+
+Transcript: How to Choose a Region
+One of the best parts about the AWS Global Infrastructure is that you have lots of options when it comes to which AWS Region, or Regions, you deploy your resources in. Before we talk about what factors into this business decision, I want to touch on an important security aspect of AWS Regions. Each Region is isolated from every other Region, in the sense that no data goes in or out of your environment in that Region without you explicitly granting permission for that data to be moved.
+
+This is a good thing! Depending on the type of business you are dealing with and where you operate, you might have to adhere to specific compliance regulations that require your data to remain in one geographical area. For example, if you're working with financial information in Frankfurt, local data governance laws state that this financial data cannot leave Germany. The data that is stored in an AWS Region is subject to the local laws and statutes of the country where the Region lives. Which is actually our first of four considerations when choosing a region: compliance.
+
+Before any of the other factors, you must first look at your compliance requirements. Do you have a requirement that your data must live in UK boundaries? Then you should choose the London Region. The choice is pretty straightforward. None of the other options really matter. Or, let's say you must run inside of Chinese borders. Well then, you should choose one of our Regions located in China. Most businesses are not governed by such strict regulations. So, if you don't have a compliance or regulatory control that dictates your Region, then you can look at the other factors.
+
+The second factor is proximity. How close you are to your customer base is a major factor. If most of your customers live in Singapore, consider running out of the Singapore Region. You can certainly run out of Virginia, but the time it takes for the information to be sent, or latency, between the US and Singapore is always going to be a factor.
+
+For number three we have feature availability. Sometimes the closest Region might not have all of the AWS features you want. Here's one of the cool things about AWS. We're constantly innovating on behalf of our customers. Every year, AWS releases lots of new features and products specifically to answer customer requests and needs. These features are rolled out to regions over time, so that is also a consideration.
+
+Finally factor number four is pricing. Even when the services and features are equal from one Region to the next, some locations are more cost effective to operate in than others. Things like local tax structure and energy costs factor into the equation. AWS has a very transparent, granular pricing that we'll continue to discuss in this training. But know that each Region has different numbers for pricing.
+
+So, to wrap up, you have a lot of options in terms of where to deploy your resources. Keep these four key factors in mind when choosing a Region: compliance, proximity, feature availability, and pricing.
+
+Key considerations when choosing Regions
+
+
+Numbered divider1
+Compliance
+
+Compliance is an important consideration when selecting Regions for deploying business resources. Different geographical locations have varying regulatory requirements and data protection laws that organizations must follow. For example, the General Data Protection Regulation (GDPR) is designed to protect the personal data and privacy of individuals within the European Union (EU). An online retail company operating in the EU would be required to meet GDPR compliance to protect customer data. GDPR compliance includes obtaining proper consent for data collection and providing mechanisms for data access and deletion.
+
+Numbered divider2
+Proximity
+
+When selecting a Region, you also want to consider how to achieve low latency for your users. Regions closer to your user base minimize data travel time, which reduces latency and enhances application responsiveness. Choosing a Region or set of Regions farther away from customers could introduce delays, which might impact user satisfaction and overall system efficiency.
+
+Numbered divider3
+Feature availability
+
+You also want to consider which specific features and services are available in each Region. AWS is constantly expanding features and services to multiple locations, but not all Regions contain all AWS offerings. For example, AWS GovCloud Regions are specifically designed to meet the compliance and security requirements of US government agencies and their contractors. These Regions have stringent physical, operational, and personnel security controls in place. These controls are only available in specific Regions to meet certain governmental regulatory requirements.
+
+Numbered divider4
+Pricing
+
+When selecting a Region, pricing is also a factor that can influence your decision. Some Regions have lower operational costs than others. These operational costs can impact the overall expenses for hosting applications and services. Tax laws and regulations can also play a role in cost. Some Regions might offer tax incentives or have lower tax rates, which can affect customer pricing. Additionally, data sovereignty laws in certain Regions might require data to be stored locally, affecting both compliance and cost.
+
+Test your skills
+
+A cloud engineer for a government agency is tasked with selecting an AWS Region to deploy the agency's resources.
+
+
+Which factors are MOST important to consider when selecting a Region? (Select TWO.)
+
+
+Any regulatory compliance standards the agency requires
+
+
+Proximity to users
+
+
+Number of files stored
+
+
+Personal preference of the chief information officer
+
+
+How recently the Region was constructed
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_23] Key Factors for Region Selection
+2026-02-01 00:15:36
+--------------------------------------------------------------------------------
+Compliance
+
+Compliance is an important consideration when selecting Regions for deploying business resources. Different geographical locations have varying regulatory requirements and data protection laws that organizations must follow. For example, the General Data Protection Regulation (GDPR) is designed to protect the personal data and privacy of individuals within the European Union (EU). An online retail company operating in the EU would be required to meet GDPR compliance to protect customer data. GDPR compliance includes obtaining proper consent for data collection and providing mechanisms for data access and deletion.
+
+Numbered divider2
+Proximity
+
+When selecting a Region, you also want to consider how to achieve low latency for your users. Regions closer to your user base minimize data travel time, which reduces latency and enhances application responsiveness. Choosing a Region or set of Regions farther away from customers could introduce delays, which might impact user satisfaction and overall system efficiency.
+
+Numbered divider3
+Feature availability
+
+You also want to consider which specific features and services are available in each Region. AWS is constantly expanding features and services to multiple locations, but not all Regions contain all AWS offerings. For example, AWS GovCloud Regions are specifically designed to meet the compliance and security requirements of US government agencies and their contractors. These Regions have stringent physical, operational, and personnel security controls in place. These controls are only available in specific Regions to meet certain governmental regulatory requirements.
+
+Numbered divider4
+Pricing
+
+When selecting a Region, pricing is also a factor that can influence your decision. Some Regions have lower operational costs than others. These operational costs can impact the overall expenses for hosting applications and services. Tax laws and regulations can also play a role in cost. Some Regions might offer tax incentives or have lower tax rates, which can affect customer pricing. Additionally, data sovereignty laws in certain Regions might require data to be stored locally, affecting both compliance and cost.
+--------------------------------------------------------------------------------
+
+
+[NOTE_24] Multi-Region and Multi-AZ Deployment
+2026-02-01 00:31:47
+--------------------------------------------------------------------------------
+Deploying multi-Region and multi-AZ resources
+
+You've learned how deploying your cloud resources to multiple Regions can achieve high availability. In addition to deploying to multiple Regions, you also want to deploy resources to multiple Availability Zones. By building redundant architectures or replicating your resources across multiple levels of AWS infrastructure, you can improve application reliability so that your users have access to your content when they need it.
+
+In addition to high availability, the AWS Global Infrastructure also helps you achieve agility and elasticity for your business. Let's discuss the difference between these advantages:
+
+•
+High availability: High availability refers to the capability of a system to operate continuously without failing. In the context of AWS infrastructure, it means that your applications can handle the failure of individual components without significant downtime.
+
+•
+Agility: Agility refers to the ability to quickly adapt to changing requirements or market conditions. With AWS infrastructure in place, you can modify and deploy services rapidly.
+
+•
+Elasticity: Elasticity refers to the ability of a system to scale resources up or down automatically in response to changes in demand. AWS infrastructure is set up for you to scale resources up and down on demand.
+--------------------------------------------------------------------------------
+
+
+[NOTE_25] UnboundLocalError in Python Code
+2026-02-01 00:33:17
+--------------------------------------------------------------------------------
+
+❌ ERROR: cannot access local variable 'time' where it is not associated with a value
+Traceback (most recent call last):
+  File "C:\Users\Williwaugh\Desktop\Stockbot\backtester.py", line 7933, in task
+    _, _ = market_cache.preload_data_batch(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        api, symbols, dates,
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+        top_n_symbols=100
+        ^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Williwaugh\Desktop\Stockbot\backtester.py", line 3221, in preload_data_batch
+    time.sleep(delay_seconds)
+    ^^^^
+UnboundLocalError: cannot access local variable 'time' where it is not associated with a value
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_26] CloudFormation and Infrastructure Automation
+2026-02-01 00:34:30
+--------------------------------------------------------------------------------
+Infrastructure and Automation
+In this lesson, you will learn how to do the following:
+
+Describe the key features and benefits of CloudFormation.
+
+Identify use cases for programmatic access, the AWS Management Console, and infrastructure as code.
+
+At this point, you have a solid understanding of the basics of AWS infrastructure. You know the difference between Regions, Availability Zones, and edge locations. You also recognize the benefits of deploying resources to multiple Regions, Availability Zones, or both, and you can start to make some decisions on which Region or Regions your business would select. In this lesson, you will consider methods for automating these types of deployments. Infrastructure as code (IaC) tools such as CloudFormation can help you scale your resources from one location to another with minimal effort.
+
+Play Video
+
+Transcript: Infrastructure and Automation
+By now, you know that in order to manage AWS resources, you have to interact with AWS APIs. You've learned how to do this using the Management Console, the CLI, and SDKs. But what happens when you need to create and manage multiple resources, possibly across multiple AWS Regions or multiple accounts, and you want to make sure everything is consistent and repeatable?
+
+Say you have resources in Region A, and you want to launch them in Region B for high availability. You could set everything up manually by clicking through the console or running commands, remembering all of your configurations as you go along, but that’s slow, error-prone, and hard to reproduce. Or you can use automation and this is where the concept of infrastructure as code, or IaC, comes in.
+
+You can use IaC to define your infrastructure in a file, almost like a blueprint for your AWS architecture. You can then use tools or services to automatically build and configure your resources based on your blueprint specifications. You can deploy the same setup multiple times without variation, and you can track changes to your infrastructure more effectively using source control.
+
+AWS CloudFormation is an IaC service that you can use to define a wide variety of AWS resources in a declarative way by creating text-based documents called CloudFormation templates. You can define what resources you want to build without specifying the details of exactly how to build it. CloudFormation parses the template and then provisions all of the resources you defined, calling the needed AWS APIs in the background to make it all happen.
+
+When you deploy the same template in multiple accounts or multiple Regions, identical environments are created across them. There’s less room for human error, because it's a totally automated process. So now, instead of manually setting up resources in Region B to match Region A, you can create a CloudFormation template that defines everything your infrastructure needs. With a single command, AWS provisions those resources exactly as defined.
+
+And, hey, look at that, you've saved time, reduced the margin for error, and made your architecture more resilient. Nice work. You're really starting to catch on to all of this cloud practitioner stuff.
+
+
+CloudFormation
+
+CloudFormation is a service that helps you model and set up your AWS resources so that you can spend less time managing those resources and more time focusing on your applications that run in AWS. With CloudFormation, you can define your infrastructure as code. You create a template that describes all the AWS resources that you want (like Amazon Elastic Compute Cloud (Amazon EC2) instances), and CloudFormation takes care of provisioning and configuring those resources for you.
+
+To learn more, refer to AWS CloudFormation(opens in a new tab).
+
+Interacting with AWS resources
+
+As you've learned, there are a number of ways you can operate in the AWS Cloud. To interact with AWS resources, you must invoke AWS APIs. To interact with these APIs, you can use the AWS SDKs, the AWS Command Line Interface (AWS CLI), the AWS Management Console, or IaC tools such as CloudFormation. To review functions and use cases for using these approaches, choose each of the numbered markers.
+
+
+
+
+
+Test your skills
+
+A rapidly growing tech startup company is planning to launch a new web application that will require a complex infrastructure setup, including multiple Amazon EC2 instances, Elastic Load Balancing, and Auto Scaling groups. The application must be deployed consistently across different environments.
+
+Would AWS CloudFormation be a good solution for managing the company's infrastructure?
+
+
+CloudFormation would not be useful in this scenario because it only supports simple infrastructure setups.
+
+
+CloudFormation would be ideal because it supports infrastructure as code (IaC), enabling consistent, repeatable deployments across different environments.
+
+
+CloudFormation should be used only for setting up static websites, not for complex applications.
+
+
+CloudFormation is too complicated and would slow down the deployment process.
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_27] Programmatic Access in AWS
+2026-02-01 00:39:59
+--------------------------------------------------------------------------------
+Programmatic access includes options like the AWS CLI and AWS SDKs. These options are best suited for developers and those familiar with coding languages.
+
+With the AWS CLI, you manage multiple AWS services directly from the command line. You can automate tasks through scripts.
+
+AWS SDKs can help integrate AWS services into your applications by providing APIs for various programming languages. AWS provides documentation and sample code to help you get started with using SDKs.
+
+Use cases for AWS CLI actions and SDKs include the following:
+
+AWS CLI: Automate routine tasks. For example, you might write a script to provide routine backups for a service such as Amazon Elastic Block Store (Amazon EBS).
+
+SDKs: Invoke APIs for one part of an application process. For example, you might use an SDK to store user data in an AWS storage service such as Amazon Simple Storage Service (Amazon S3).
+--------------------------------------------------------------------------------
+
+
+[NOTE_28] Programmatic Access in AWS
+2026-02-01 00:39:59
+--------------------------------------------------------------------------------
+Programmatic access includes options like the AWS CLI and AWS SDKs. These options are best suited for developers and those familiar with coding languages.
+
+With the AWS CLI, you manage multiple AWS services directly from the command line. You can automate tasks through scripts.
+
+AWS SDKs can help integrate AWS services into your applications by providing APIs for various programming languages. AWS provides documentation and sample code to help you get started with using SDKs.
+
+Use cases for AWS CLI actions and SDKs include the following:
+
+AWS CLI: Automate routine tasks. For example, you might write a script to provide routine backups for a service such as Amazon Elastic Block Store (Amazon EBS).
+
+SDKs: Invoke APIs for one part of an application process. For example, you might use an SDK to store user data in an AWS storage service such as Amazon Simple Storage Service (Amazon S3).
+--------------------------------------------------------------------------------
+
+
+[NOTE_29] Infrastructure as Code (IaC) Overview
+2026-02-01 00:40:29
+--------------------------------------------------------------------------------
+With IaC tools such as CloudFormation, you can automate resource management across your organization with AWS service integrations offering efficient and repeatable resource creation and management.
+
+Use cases for CloudFormation include the following:
+
+Managing infrastructure with DevOps such as continuous integration and delivery (CI/CD) pipelines
+
+Scaling resources such as Amazon EC2 instances to multi-Region applications in a consistent, repeatable way
+--------------------------------------------------------------------------------
+
+
+[NOTE_30] Infrastructure as Code (IaC) Overview
+2026-02-01 00:40:29
+--------------------------------------------------------------------------------
+With IaC tools such as CloudFormation, you can automate resource management across your organization with AWS service integrations offering efficient and repeatable resource creation and management.
+
+Use cases for CloudFormation include the following:
+
+Managing infrastructure with DevOps such as continuous integration and delivery (CI/CD) pipelines
+
+Scaling resources such as Amazon EC2 instances to multi-Region applications in a consistent, repeatable way
+--------------------------------------------------------------------------------
+
+
+[NOTE_31] Introduction to Networking Concepts
+2026-02-02 01:02:24
+--------------------------------------------------------------------------------
+Introduction to Networking
+
+In this lesson, you will learn how to do the following:
+
+Describe what a virtual private cloud (VPC) is and what it does.
+
+Describe what a subnet is and what it does.
+
+Describe the difference between a public and private subnet.
+
+The term networking refers to interconnected devices that can exchange data and resources. Networking in the AWS Cloud consists of the infrastructure and services working together to host your applications, data, and any other resources you might need. Let's get started and learn about the foundational network components used in the AWS Cloud.
+
+Play Video
+Play
+Remaining Time -2:07
+1x
+Playback Rate 1x
+
+Captions
+
+Picture-in-Picture
+
+Fullscreen
+
+Mute
+
+Transcript: Introduction to Networking
+Looks like things are really moving forward in our coffee shop. Though, we had a few eager customers go full steam ahead and yell their orders at the baristas! Tsk tsk.
+
+They should be politely asking the cashiers instead. This does bring up an interesting point, however. It just doesn't make sense to allow every customer to be able to interact with the baristas in the back. After all, our baristas need to stay focused on crafting caffeinated beverages. So, what do we do?
+
+Well, we need to limit access to the baristas, and let customers interact only with our cashiers. And wouldn’t you know it, we can use AWS networking to accomplish that. Specifically, a networking concept called Amazon Virtual Private Cloud, or VPC. VPCs help you provision a logically isolated section of the AWS Cloud.
+
+In this virtual network, you can launch whatever resources you decide on. More importantly, these resources can be public or private. Public-facing resources have access to the internet, whereas private resources do not have internet access.
+
+This is perfect for our coffee shop. We can make our cashiers publicly-accessible so they can interact with our customers to take their order and process payments. We can then prevent our customers from interacting directly with the baristas by making them private resources. This means, hey, I can focus on making drinks! Ahhhhh, refreshing.
+
+Okay, time to dive into more networking concepts. Good luck!
+
+Networking components
+
+So far, you've learned about the AWS Cloud, AWS Regions, and Availability Zones. Now you will review two more foundational networking components you will use in the AWS Cloud.
+
+Amazon Virtual Private Cloud (Amazon VPC)
+An Amazon VPC lets you provision a logically isolated section of the AWS Cloud where you can launch AWS resources in a virtual network that you define.
+
+Several different company buildings with a bank showing an arrow moving into the cloud. The cloud has a lock on it and a square labeled VPC with some resources in it.
+Subnet
+Subnets are used to organize your resources and can be made publicly or privately accessible. A private subnet is commonly used to contain resources like a database storing customer or transactional information. A public subnet is commonly used for resources like a customer-facing website.
+
+A virtual private cloud showing two separate subnets organizing resources.
+Networking components: Understanding connections through diagrams
+
+If you are new to IT or cloud computing, you might not have worked with architectural diagrams before. A diagram is, simply put, a schematic or map of your network in the AWS Cloud. It can provide a visual of how users or applications access services, resources, or data. A picture is worth a thousand words. With a quick glance, you can see if the network was built for redundancy, security, and even scalability. It can also serve as a blueprint so you don't forget important connections when building your solutions.
+
+To learn more about network diagrams, choose the arrow buttons to display each of the three slides.
+--------------------------------------------------------------------------------
+
+
+[NOTE_32] Introduction to Networking Concepts
+2026-02-02 01:02:25
+--------------------------------------------------------------------------------
+Introduction to Networking
+
+In this lesson, you will learn how to do the following:
+
+Describe what a virtual private cloud (VPC) is and what it does.
+
+Describe what a subnet is and what it does.
+
+Describe the difference between a public and private subnet.
+
+The term networking refers to interconnected devices that can exchange data and resources. Networking in the AWS Cloud consists of the infrastructure and services working together to host your applications, data, and any other resources you might need. Let's get started and learn about the foundational network components used in the AWS Cloud.
+
+Play Video
+Play
+Remaining Time -2:07
+1x
+Playback Rate 1x
+
+Captions
+
+Picture-in-Picture
+
+Fullscreen
+
+Mute
+
+Transcript: Introduction to Networking
+Looks like things are really moving forward in our coffee shop. Though, we had a few eager customers go full steam ahead and yell their orders at the baristas! Tsk tsk.
+
+They should be politely asking the cashiers instead. This does bring up an interesting point, however. It just doesn't make sense to allow every customer to be able to interact with the baristas in the back. After all, our baristas need to stay focused on crafting caffeinated beverages. So, what do we do?
+
+Well, we need to limit access to the baristas, and let customers interact only with our cashiers. And wouldn’t you know it, we can use AWS networking to accomplish that. Specifically, a networking concept called Amazon Virtual Private Cloud, or VPC. VPCs help you provision a logically isolated section of the AWS Cloud.
+
+In this virtual network, you can launch whatever resources you decide on. More importantly, these resources can be public or private. Public-facing resources have access to the internet, whereas private resources do not have internet access.
+
+This is perfect for our coffee shop. We can make our cashiers publicly-accessible so they can interact with our customers to take their order and process payments. We can then prevent our customers from interacting directly with the baristas by making them private resources. This means, hey, I can focus on making drinks! Ahhhhh, refreshing.
+
+Okay, time to dive into more networking concepts. Good luck!
+
+Networking components
+
+So far, you've learned about the AWS Cloud, AWS Regions, and Availability Zones. Now you will review two more foundational networking components you will use in the AWS Cloud.
+
+Amazon Virtual Private Cloud (Amazon VPC)
+An Amazon VPC lets you provision a logically isolated section of the AWS Cloud where you can launch AWS resources in a virtual network that you define.
+
+Several different company buildings with a bank showing an arrow moving into the cloud. The cloud has a lock on it and a square labeled VPC with some resources in it.
+Subnet
+Subnets are used to organize your resources and can be made publicly or privately accessible. A private subnet is commonly used to contain resources like a database storing customer or transactional information. A public subnet is commonly used for resources like a customer-facing website.
+
+A virtual private cloud showing two separate subnets organizing resources.
+Networking components: Understanding connections through diagrams
+
+If you are new to IT or cloud computing, you might not have worked with architectural diagrams before. A diagram is, simply put, a schematic or map of your network in the AWS Cloud. It can provide a visual of how users or applications access services, resources, or data. A picture is worth a thousand words. With a quick glance, you can see if the network was built for redundancy, security, and even scalability. It can also serve as a blueprint so you don't forget important connections when building your solutions.
+
+To learn more about network diagrams, choose the arrow buttons to display each of the three slides.
+--------------------------------------------------------------------------------
+
+
+[NOTE_33] Organizing AWS Cloud Resources
+2026-02-02 02:21:38
+--------------------------------------------------------------------------------
+Organizing AWS Cloud Resources
+In this lesson, you will learn how to do the following:
+
+Define what a virtual private gateway is and what it does.
+
+Identify the core components of a VPC.
+
+Define an internet gateway and what it does.
+
+In this lesson, you will explore more components in a VPC. Specifically, you will learn more about organizing your resources in the cloud using boundaries and subnets. You will also learn more about controlling access using gateways.
+
+
+Pause
+Remaining Time -4:24
+1x
+Playback Rate 1x
+
+Captions
+
+Picture-in-Picture
+
+Fullscreen
+
+Mute
+
+Transcript: Connectivity to AWS
+To reiterate, a VPC, or virtual private cloud, is essentially your own private network in AWS. When you use a VPC, you can define your private IP range for your AWS resources and place things, like EC2 instances and elastic load balancers, inside of your VPC.
+
+Now, you don't just go throwing your resources into one big VPC network space and then move on. Instead, you place them into different specific subnets. Subnets are chunks of IP addresses in your VPC that you can use to group resources together. Subnets, along with networking rules that we will cover later, control whether resources are either publicly or privately available.
+
+This idea of public compared to private access to resources is super important. For some VPCs, you might have internet-facing resources that the public should be able to reach, like a public website or a load balancer, for example.
+
+However, in other scenarios, you might have resources that you only want to be reachable if someone is logged into your private network. This might be internal services, like an HR application or a backend database.
+
+First let’s talk about public-facing resources. To allow traffic from the public internet to flow into and out of your VPC, you must attach what is called an internet gateway to your VPC. An internet gateway is like a doorway that is open to the public.
+
+Think of the coffee shop. Without a front door, the customers couldn't get in and order their coffee. So, you install an entrance, and the people can enter and exit when coming and going from the shop. The front door in this example is like an internet gateway. Without it, no one can reach the resources placed inside of your VPC.
+
+Next, let's talk about a VPC with all internal private resources, when you don't want an internet gateway attached to your VPC. Instead, you want a private gateway that only allows people in if they are coming from an approved network, not the public internet. This private doorway is called a virtual private gateway, and it allows you to create a VPN connection between a private network, like your on-premises data center or internal corporate network to your VPC.
+
+To relate this back to the coffee shop, this would be like if the coffee shop was located inside of a private corporate office building. If I want to go get coffee, I have to badge in to verify my identity. Then I can access the internal coffee shop that only people with access to the building can use. So, if you want to establish an encrypted VPN connection to your private internal AWS resources, you need to attach a virtual private gateway to your VPC.
+
+Now, something to note about the coffee shop in the private corporate office building is that this office building is shared by multiple companies, and there are a lot of people who work here. Even though I have special access to the coffee shop, I still might have to wait for the elevator, navigate crowded hallways, or stand in line.
+
+This is similar to how a VPN works. While it provides a secure connection, it still routes your traffic through a shared network, which can sometimes lead to slowdowns, especially when many people are using it at the same time. It’s not that the VPN itself is slow or a bad option, but rather you may need higher bandwidth or a dedicated line in certain scenarios.
+
+Now, if I had a direct, super-secret magic doorway that led from the studio straight into the coffee shop, I'd bypass any congestion and have a reliable, high throughput, coffee connection at any time. That sounds pretty nice. This is a similar idea behind wanting dedicated private connection to AWS.
+
+With AWS, you can achieve that using a service called AWS Direct Connect. Direct Connect lets you establish a completely private, dedicated fiber connection from your data center to AWS. It ensures both security and consistent high performance. You work with a Direct Connect partner in your area to establish this connection because, like my magic doorway, Direct Connect provides a physical line that connects your network to your Amazon VPC. This can help you meet regulatory and compliance needs, as well as sidestep any potential bandwidth issues.
+
+Thanks for listening. I'm gonna hang out here and keep ordering magic drinks from my magic door. See ya.
+
+Organizing resources in the AWS Cloud
+
+Imagine the millions of customers who use AWS services. Also imagine the millions of resources that these customers have created, such as Amazon EC2 instances. Without boundaries around all these resources, network traffic can flow between them unrestricted. In the following section you will learn about two components of the AWS Cloud.
+
+Amazon Virtual Private Cloud (VPC)
+
+Gateways to connect your resources
+
+A company building with arrows going to the cloud with a VPC containing some AWS resources
+Establishing boundaries around AWS resources
+
+When organizing your resources in the AWS Cloud, you need to be able to group certain functions together and isolate them from the public, or make them available to the public. You've been introduced to what Amazon VPCs do. Next, you will review the benefits.
+
+VPC cloud with a shield
+Amazon VPC
+
+With Amazon VPC, you can provision an isolated section of the AWS Cloud. In this isolated section, you can launch resources in a virtual network that you define. It provides three main benefits. It helps increase security because you can secure and monitor connections, screen traffic, and restrict instance access. Amazon VPC gives you full control over your resource placement, connectivity, and security. The convenience of using Amazon VPC means you will spend less time setting up, managing, and validating your virtual network when compared to on-premises network management.
+
+Benefits of Amazon VPC with a badge and lock, a clock with a gear saving time, and a cloud with sliding controls.
+Subnets
+
+Within an Amazon VPC, you can organize your resources into subsections or subnets. A subnet is a section of an Amazon VPC that can contain resources, such as Amazon EC2 instances. You will learn more about subnets in the next lesson.
+
+Connecting your resources with an internet gateway
+
+To allow public traffic from the internet to access your VPC, you attach an internet gateway to the VPC. An internet gateway is a connection between a VPC and the internet. You can think of an internet gateway as being similar to a doorway that customers use to enter the coffee shop. Without an internet gateway, no one can access the resources within your VPC.
+
+Internet gateway icon attached to a VPC that holds three EC2 instances. An arrow connects the client to the gateway over the internet indicating that the client's request has gained access to the VPC.
+
+Virtual private gateways
+
+What if you have a VPC that includes only private resources? The following example shows how a virtual private gateway works. You can think of the internet as the road between your home and the coffee shop. It is open and accessible to anyone. You want a way to protect the traffic you send on the internet from the public, internet service providers, and others who might be trying to track or intercept it. This is where a virtual private network (VPN) connection comes in.
+
+VPN creates a connection that is more like a secure tunnel through the internet. Using encryption, it hides and protects everything you send and receive from outside eyes. A virtual private gateway is the component in the AWS Cloud that makes it possible for you to connect this protected traffic to enter the VPC. With a VPN connection, your data travels privately and safely, hidden from others using the same route.
+
+With a virtual private gateway, you can establish a VPN connection between your VPC and a private network, such as an on-premises data center or internal corporate network. A virtual private gateway allows traffic into the VPC only if it is coming from an approved network.
+
+A client sends a request through the internet to the VPC. The request goes through the internet gateway and goes into the VPC. The VPC contains one subnet with three Amazon EC2 instances.
+
+Several of the preceding networking components have similar abbreviations and are often confused. These components are core building blocks that you'll use in many AWS Cloud solutions. To learn the differences between these acronyms, choose each of the following flashcards.
+--------------------------------------------------------------------------------
+
+
+[NOTE_34] Organizing AWS Cloud Resources
+2026-02-02 02:21:38
+--------------------------------------------------------------------------------
+Organizing AWS Cloud Resources
+In this lesson, you will learn how to do the following:
+
+Define what a virtual private gateway is and what it does.
+
+Identify the core components of a VPC.
+
+Define an internet gateway and what it does.
+
+In this lesson, you will explore more components in a VPC. Specifically, you will learn more about organizing your resources in the cloud using boundaries and subnets. You will also learn more about controlling access using gateways.
+
+
+Pause
+Remaining Time -4:24
+1x
+Playback Rate 1x
+
+Captions
+
+Picture-in-Picture
+
+Fullscreen
+
+Mute
+
+Transcript: Connectivity to AWS
+To reiterate, a VPC, or virtual private cloud, is essentially your own private network in AWS. When you use a VPC, you can define your private IP range for your AWS resources and place things, like EC2 instances and elastic load balancers, inside of your VPC.
+
+Now, you don't just go throwing your resources into one big VPC network space and then move on. Instead, you place them into different specific subnets. Subnets are chunks of IP addresses in your VPC that you can use to group resources together. Subnets, along with networking rules that we will cover later, control whether resources are either publicly or privately available.
+
+This idea of public compared to private access to resources is super important. For some VPCs, you might have internet-facing resources that the public should be able to reach, like a public website or a load balancer, for example.
+
+However, in other scenarios, you might have resources that you only want to be reachable if someone is logged into your private network. This might be internal services, like an HR application or a backend database.
+
+First let’s talk about public-facing resources. To allow traffic from the public internet to flow into and out of your VPC, you must attach what is called an internet gateway to your VPC. An internet gateway is like a doorway that is open to the public.
+
+Think of the coffee shop. Without a front door, the customers couldn't get in and order their coffee. So, you install an entrance, and the people can enter and exit when coming and going from the shop. The front door in this example is like an internet gateway. Without it, no one can reach the resources placed inside of your VPC.
+
+Next, let's talk about a VPC with all internal private resources, when you don't want an internet gateway attached to your VPC. Instead, you want a private gateway that only allows people in if they are coming from an approved network, not the public internet. This private doorway is called a virtual private gateway, and it allows you to create a VPN connection between a private network, like your on-premises data center or internal corporate network to your VPC.
+
+To relate this back to the coffee shop, this would be like if the coffee shop was located inside of a private corporate office building. If I want to go get coffee, I have to badge in to verify my identity. Then I can access the internal coffee shop that only people with access to the building can use. So, if you want to establish an encrypted VPN connection to your private internal AWS resources, you need to attach a virtual private gateway to your VPC.
+
+Now, something to note about the coffee shop in the private corporate office building is that this office building is shared by multiple companies, and there are a lot of people who work here. Even though I have special access to the coffee shop, I still might have to wait for the elevator, navigate crowded hallways, or stand in line.
+
+This is similar to how a VPN works. While it provides a secure connection, it still routes your traffic through a shared network, which can sometimes lead to slowdowns, especially when many people are using it at the same time. It’s not that the VPN itself is slow or a bad option, but rather you may need higher bandwidth or a dedicated line in certain scenarios.
+
+Now, if I had a direct, super-secret magic doorway that led from the studio straight into the coffee shop, I'd bypass any congestion and have a reliable, high throughput, coffee connection at any time. That sounds pretty nice. This is a similar idea behind wanting dedicated private connection to AWS.
+
+With AWS, you can achieve that using a service called AWS Direct Connect. Direct Connect lets you establish a completely private, dedicated fiber connection from your data center to AWS. It ensures both security and consistent high performance. You work with a Direct Connect partner in your area to establish this connection because, like my magic doorway, Direct Connect provides a physical line that connects your network to your Amazon VPC. This can help you meet regulatory and compliance needs, as well as sidestep any potential bandwidth issues.
+
+Thanks for listening. I'm gonna hang out here and keep ordering magic drinks from my magic door. See ya.
+
+Organizing resources in the AWS Cloud
+
+Imagine the millions of customers who use AWS services. Also imagine the millions of resources that these customers have created, such as Amazon EC2 instances. Without boundaries around all these resources, network traffic can flow between them unrestricted. In the following section you will learn about two components of the AWS Cloud.
+
+Amazon Virtual Private Cloud (VPC)
+
+Gateways to connect your resources
+
+A company building with arrows going to the cloud with a VPC containing some AWS resources
+Establishing boundaries around AWS resources
+
+When organizing your resources in the AWS Cloud, you need to be able to group certain functions together and isolate them from the public, or make them available to the public. You've been introduced to what Amazon VPCs do. Next, you will review the benefits.
+
+VPC cloud with a shield
+Amazon VPC
+
+With Amazon VPC, you can provision an isolated section of the AWS Cloud. In this isolated section, you can launch resources in a virtual network that you define. It provides three main benefits. It helps increase security because you can secure and monitor connections, screen traffic, and restrict instance access. Amazon VPC gives you full control over your resource placement, connectivity, and security. The convenience of using Amazon VPC means you will spend less time setting up, managing, and validating your virtual network when compared to on-premises network management.
+
+Benefits of Amazon VPC with a badge and lock, a clock with a gear saving time, and a cloud with sliding controls.
+Subnets
+
+Within an Amazon VPC, you can organize your resources into subsections or subnets. A subnet is a section of an Amazon VPC that can contain resources, such as Amazon EC2 instances. You will learn more about subnets in the next lesson.
+
+Connecting your resources with an internet gateway
+
+To allow public traffic from the internet to access your VPC, you attach an internet gateway to the VPC. An internet gateway is a connection between a VPC and the internet. You can think of an internet gateway as being similar to a doorway that customers use to enter the coffee shop. Without an internet gateway, no one can access the resources within your VPC.
+
+Internet gateway icon attached to a VPC that holds three EC2 instances. An arrow connects the client to the gateway over the internet indicating that the client's request has gained access to the VPC.
+
+Virtual private gateways
+
+What if you have a VPC that includes only private resources? The following example shows how a virtual private gateway works. You can think of the internet as the road between your home and the coffee shop. It is open and accessible to anyone. You want a way to protect the traffic you send on the internet from the public, internet service providers, and others who might be trying to track or intercept it. This is where a virtual private network (VPN) connection comes in.
+
+VPN creates a connection that is more like a secure tunnel through the internet. Using encryption, it hides and protects everything you send and receive from outside eyes. A virtual private gateway is the component in the AWS Cloud that makes it possible for you to connect this protected traffic to enter the VPC. With a VPN connection, your data travels privately and safely, hidden from others using the same route.
+
+With a virtual private gateway, you can establish a VPN connection between your VPC and a private network, such as an on-premises data center or internal corporate network. A virtual private gateway allows traffic into the VPC only if it is coming from an approved network.
+
+A client sends a request through the internet to the VPC. The request goes through the internet gateway and goes into the VPC. The VPC contains one subnet with three Amazon EC2 instances.
+
+Several of the preceding networking components have similar abbreviations and are often confused. These components are core building blocks that you'll use in many AWS Cloud solutions. To learn the differences between these acronyms, choose each of the following flashcards.
+--------------------------------------------------------------------------------
+
+
+[NOTE_35] Connecting to AWS Cloud Solutions
+2026-02-02 02:44:23
+--------------------------------------------------------------------------------
+More Ways to Connect to the AWS Cloud
+In this lesson, you will learn how to do the following:
+
+Describe AWS Client VPN and when to use it.
+
+Describe AWS Site-to-Site VPN and when to use it.
+
+Describe AWS PrivateLink and when to use it.
+
+Describe AWS Direct Connect and when to use it.
+
+In this lesson, you will explore more hybrid cloud connections with the AWS Cloud. Specifically, you'll learn more ways to connect your clients, datacenters, and sites to the AWS Cloud.
+
+Connecting to the AWS Cloud
+
+With so many different types of networks, on-premises datacenters, and remote workers, companies need a wide range of ways to connect to the AWS Cloud. In the following section, you will learn four ways to connect to the AWS Cloud:
+
+AWS Client VPN
+
+AWS Site-to-Site VPN
+
+AWS PrivateLink
+
+AWS Direct Connect
+
+Many ways to connect a VPC in the AWS Cloud connecting to a branch office, a data center, and remote workers.
+Securely connect a remote workforce to AWS Cloud resources
+
+Imagine a company with a recent acquisition needing to securely connect their new remote workforce to their AWS Cloud resources. Even the largest companies with worldwide remote workers can quickly scale up and connect to the AWS Cloud. That's where AWS Client VPN can help.
+
+
+AWS Client VPN
+
+AWS Client VPN is a networking service you can use to connect your remote workers and on-premises networks to the cloud. It is a fully managed, elastic VPN service that automatically scales up or down based on user demand. Because it is a cloud VPN solution, you don’t need to install and manage hardware or try to estimate how many remote users to support at one time.
+
+Benefits: AWS Client VPN provides advanced authentication, remote access. It is elastic and fully managed.
+
+Use case: It can be used to quickly scale remote-worker access.
+
+A globe with sites dispersed and remote workers connecting to the different sites.
+Client VPN, a managed VPN service, provides secure access to AWS resources and on-premises networks from anywhere. It uses an OpenVPN-based client, and it works with global Regions by using the AWS global network.
+
+Securely connect sites to other sites
+
+Some companies might want to establish secure, encrypted connections between their on-premises networks like data centers or branch offices and their resources in their Amazon VPC. That's where Site-to-Site VPN can help.
+
+
+AWS Site-to-Site VPN
+
+Site-to-Site VPN creates a secure connection between your data center or branch offices and your AWS Cloud resources.
+
+Benefits: Site-to-Site VPN provides high availability, secure and private sessions, and accelerates applications.
+
+Use cases: It can be used for application migration and secure communication between remote locations.
+
+AWS Cloud with a VPN and resources with a virtual private gateway. The branch office, data center, and manufacturing site are connecting with secure VPN connections.
+Securely connect resources, even in other VPCs
+
+Other companies sometimes need the flexibility to privately connect to resources in other cloud providers as though they were in their own VPC. They need a way to communicate with these resources and don't want the hassle of setting up gateways or site-to-site VPNs. That's where AWS PrivateLink can help.
+
+
+AWS PrivateLink
+
+AWS PrivateLink is a highly available, scalable technology that you can use to privately connect your VPC to services and resources as if they were in your VPC. You do not need to use an internet gateway, NAT device, public IP address, Direct Connect connection, or AWS Site-to-Site VPN connection to allow communication with AWS services or resources from your private subnets. Instead, you control the specific API endpoints, sites, services, and resources that are reachable from your VPC.
+
+Benefits: AWS PrivateLink helps you secure your traffic and connect with simplified management rules.
+
+Use case: It is used for connecting your clients in your VPC to resources, other VPCs, and endpoints.
+
+Even though the preceding connections are highly available and scalable, traffic jams are possible because you’re using the same connection as other clients. That's why for some use cases, you might need a dedicated private connection with a lot of bandwidth.
+
+Dedicated private connections for increased bandwidth
+
+
+AWS Direct Connect
+
+Direct Connect is a service that makes it possible for you to establish a dedicated private connection between your network and VPC in the AWS Cloud.
+
+Benefits: AWS Direct Connect reduces network costs and increases amount of bandwidth.
+
+A corporate data center routes network traffic to an AWS Direct Connect location. That traffic is then routed to a VPC through a virtual private gateway. All network traffic between the corporate data center and VPC flows through this dedicated private connection.
+To learn more about Direct Connect, expand each of the following three categories.
+
+
+Latency-sensitive applications
+Direct Connect bypasses the internet and provides a consistent, low-latency network experience. This makes it ideal for applications like video streaming and other real-time applications that require high performance.
+
+Media files moving quickly labeled latency-sensitive applications
+
+Large-scale data migration or transfer
+Direct Connect helps ensure smooth and reliable data transfers at massive scale for real-time analysis, rapid data backup, or broadcast media processing.
+
+Businesses moving data to the cloud labeled large-scale data transfer
+
+Hybrid cloud architectures
+You can use Direct Connect to link your AWS and on-premises networks to build applications that span environments without compromising performance.
+
+A business with direct connect lines to a cloud labelled hybrid-cloud architectures
+Additional gateway services
+
+There are several different types of gateways you can use to connect your AWS resources. Depending on your needs, you might want to learn more about what they are used for and where to go to learn more. To learn more about these additional gateway types, expand each of the following three categories.
+
+
+AWS Transit Gateway
+AWS Transit Gateway is used to connect your Amazon VPCs and on-premises networks through a central hub. As your cloud infrastructure expands globally, inter-Region peering connects transit gateways together using the AWS Global Infrastructure. To learn more, refer to AWS Transit Gateways(opens in a new tab).
+
+
+
+Network Address Translation (NAT) Gateway
+A NAT gateway is a NAT service. You can use a NAT gateway so that instances in a private subnet can connect to services outside your VPC but external services can't initiate a connection with those instances. To learn more, refer to NAT gateway(opens in a new tab).
+
+
+
+Amazon API Gateway
+You learned about Application Programming Interface (API)s earlier. Quick refresher, an API defines how different software systems can interact and communicate with each other. The Amazon API Gateway is an AWS service for creating, publishing, maintaining, monitoring, and securing APIs at any scale. To learn more, refer to Amazon API Gateway(opens in a new tab).
+
+
+In this lesson, you identified services that help you connect your AWS Cloud to your clients, datacenters, and sites. To review the four types of connectivity options, choose each of the following flashcards.
+
+
+Click to flip
+AWS Direct Connect
+AWS Direct Connect is a private, dedicated AWS connection to your data center or office.
+
+
+Click to flip
+AWS Client VPN
+
+AWS Client VPN connects your remote workforce to AWS or on-premises with a VPN.
+
+
+Click to flip
+AWS Site-to-Site VPN
+AWS Site-to-Site VPN is an encrypted network connection to your Amazon VPCs.
+
+
+Click to flip
+AWS PrivateLink
+
+AWS PrivateLink connects your VPC privately to services and resources as though they were in your VPC.
+
+Test your skills
+
+A company is conducting a large-scale migration of their on-premises data center with their data warehouse and data backup. They need a solution that will meet the large amount of bandwidth requirements during migration. The solution will also be used for their ongoing data transfers after the move because they will retain part of their on-premises data center for a hybrid cloud solution.
+
+Which AWS solution would best meet their needs?
+
+
+AWS Client VPN
+
+
+AWS Site-to-Site VPN
+
+
+AWS Direct Connect link to their on-premises network and the AWS Cloud
+
+
+AWS Private Link to their on-premises datacenter
+
+SUBMIT
+
+
+TAKE AGAIN
+A company is choosing the type of gateway for their network. They need to connect their corporate data center with their private subnet in their Amazon Virtual Private Cloud. Their gateway needs to allow only protected internet traffic to enter into the Amazon VPC. It should also allow a connection between their Amazon VPC and a private network only if it is coming from an approved network.
+
+Which type of gateway would BEST meet their needs?
+
+Corporate data center using a VPN connection connecting to a virtual private cloud.
+
+
+Internet gateway
+
+
+Virtual private gateway
+
+
+AWS Transit Gateway
+
+
+Amazon API Gateway
+
+
+--------------------------------------------------------------------------------
+
+
+[NOTE_36] Connecting to the AWS Cloud
+2026-02-02 03:22:56
+--------------------------------------------------------------------------------
+More Ways to Connect to the AWS Cloud
+In this lesson, you will learn how to do the following:
+
+Describe AWS Client VPN and when to use it.
+
+Describe AWS Site-to-Site VPN and when to use it.
+
+Describe AWS PrivateLink and when to use it.
+
+Describe AWS Direct Connect and when to use it.
+
+In this lesson, you will explore more hybrid cloud connections with the AWS Cloud. Specifically, you'll learn more ways to connect your clients, datacenters, and sites to the AWS Cloud.
+
+Connecting to the AWS Cloud
+
+With so many different types of networks, on-premises datacenters, and remote workers, companies need a wide range of ways to connect to the AWS Cloud. In the following section, you will learn four ways to connect to the AWS Cloud:
+
+AWS Client VPN
+
+AWS Site-to-Site VPN
+
+AWS PrivateLink
+
+AWS Direct Connect
+
+Many ways to connect a VPC in the AWS Cloud connecting to a branch office, a data center, and remote workers.
+Securely connect a remote workforce to AWS Cloud resources
+
+Imagine a company with a recent acquisition needing to securely connect their new remote workforce to their AWS Cloud resources. Even the largest companies with worldwide remote workers can quickly scale up and connect to the AWS Cloud. That's where AWS Client VPN can help.
+
+
+AWS Client VPN
+
+AWS Client VPN is a networking service you can use to connect your remote workers and on-premises networks to the cloud. It is a fully managed, elastic VPN service that automatically scales up or down based on user demand. Because it is a cloud VPN solution, you don’t need to install and manage hardware or try to estimate how many remote users to support at one time.
+
+Benefits: AWS Client VPN provides advanced authentication, remote access. It is elastic and fully managed.
+
+Use case: It can be used to quickly scale remote-worker access.
+
+A globe with sites dispersed and remote workers connecting to the different sites.
+Client VPN, a managed VPN service, provides secure access to AWS resources and on-premises networks from anywhere. It uses an OpenVPN-based client, and it works with global Regions by using the AWS global network.
+
+Securely connect sites to other sites
+
+Some companies might want to establish secure, encrypted connections between their on-premises networks like data centers or branch offices and their resources in their Amazon VPC. That's where Site-to-Site VPN can help.
+
+
+AWS Site-to-Site VPN
+
+Site-to-Site VPN creates a secure connection between your data center or branch offices and your AWS Cloud resources.
+
+Benefits: Site-to-Site VPN provides high availability, secure and private sessions, and accelerates applications.
+
+Use cases: It can be used for application migration and secure communication between remote locations.
+
+AWS Cloud with a VPN and resources with a virtual private gateway. The branch office, data center, and manufacturing site are connecting with secure VPN connections.
+Securely connect resources, even in other VPCs
+
+Other companies sometimes need the flexibility to privately connect to resources in other cloud providers as though they were in their own VPC. They need a way to communicate with these resources and don't want the hassle of setting up gateways or site-to-site VPNs. That's where AWS PrivateLink can help.
+
+
+AWS PrivateLink
+
+AWS PrivateLink is a highly available, scalable technology that you can use to privately connect your VPC to services and resources as if they were in your VPC. You do not need to use an internet gateway, NAT device, public IP address, Direct Connect connection, or AWS Site-to-Site VPN connection to allow communication with AWS services or resources from your private subnets. Instead, you control the specific API endpoints, sites, services, and resources that are reachable from your VPC.
+
+Benefits: AWS PrivateLink helps you secure your traffic and connect with simplified management rules.
+
+Use case: It is used for connecting your clients in your VPC to resources, other VPCs, and endpoints.
+
+Even though the preceding connections are highly available and scalable, traffic jams are possible because you’re using the same connection as other clients. That's why for some use cases, you might need a dedicated private connection with a lot of bandwidth.
+
+Dedicated private connections for increased bandwidth
+
+
+AWS Direct Connect
+
+Direct Connect is a service that makes it possible for you to establish a dedicated private connection between your network and VPC in the AWS Cloud.
+
+Benefits: AWS Direct Connect reduces network costs and increases amount of bandwidth.
+
+A corporate data center routes network traffic to an AWS Direct Connect location. That traffic is then routed to a VPC through a virtual private gateway. All network traffic between the corporate data center and VPC flows through this dedicated private connection.
+To learn more about Direct Connect, expand each of the following three categories.
+
+
+Latency-sensitive applications
+Direct Connect bypasses the internet and provides a consistent, low-latency network experience. This makes it ideal for applications like video streaming and other real-time applications that require high performance.
+
+Media files moving quickly labeled latency-sensitive applications
+
+Large-scale data migration or transfer
+Direct Connect helps ensure smooth and reliable data transfers at massive scale for real-time analysis, rapid data backup, or broadcast media processing.
+
+Businesses moving data to the cloud labeled large-scale data transfer
+
+Hybrid cloud architectures
+You can use Direct Connect to link your AWS and on-premises networks to build applications that span environments without compromising performance.
+
+A business with direct connect lines to a cloud labelled hybrid-cloud architectures
+Additional gateway services
+
+There are several different types of gateways you can use to connect your AWS resources. Depending on your needs, you might want to learn more about what they are used for and where to go to learn more. To learn more about these additional gateway types, expand each of the following three categories.
+
+
+AWS Transit Gateway
+AWS Transit Gateway is used to connect your Amazon VPCs and on-premises networks through a central hub. As your cloud infrastructure expands globally, inter-Region peering connects transit gateways together using the AWS Global Infrastructure. To learn more, refer to AWS Transit Gateways(opens in a new tab).
+
+
+
+Network Address Translation (NAT) Gateway
+A NAT gateway is a NAT service. You can use a NAT gateway so that instances in a private subnet can connect to services outside your VPC but external services can't initiate a connection with those instances. To learn more, refer to NAT gateway(opens in a new tab).
+
+
+
+Amazon API Gateway
+You learned about Application Programming Interface (API)s earlier. Quick refresher, an API defines how different software systems can interact and communicate with each other. The Amazon API Gateway is an AWS service for creating, publishing, maintaining, monitoring, and securing APIs at any scale. To learn more, refer to Amazon API Gateway(opens in a new tab).
+
+
+In this lesson, you identified services that help you connect your AWS Cloud to your clients, datacenters, and sites. To review the four types of connectivity options, choose each of the following flashcards.
+
+
+Click to flipAWS Direct Connect label and logo
+
+
+Click to flipAWS PrivateLink label and logo
+
+
+
+Click to flipAWS Site to Site VPN label and logo
+
+
+Click to flip
+AWS PrivateLink
+
+AWS PrivateLink connects your VPC privately to services and resources as though they were in your VPC.
+
+Test your skills
+
+A company is conducting a large-scale migration of their on-premises data center with their data warehouse and data backup. They need a solution that will meet the large amount of bandwidth requirements during migration. The solution will also be used for their ongoing data transfers after the move because they will retain part of their on-premises data center for a hybrid cloud solution.
+
+Which AWS solution would best meet their needs?
+
+
+AWS Client VPN
+
+
+AWS Site-to-Site VPN
+
+
+AWS Direct Connect link to their on-premises network and the AWS Cloud
+
+
+AWS Private Link to their on-premises datacenter
+
+SUBMIT
+
+
+TAKE AGAIN
+A company is choosing the type of gateway for their network. They need to connect their corporate data center with their private subnet in their Amazon Virtual Private Cloud. Their gateway needs to allow only protected internet traffic to enter into the Amazon VPC. It should also allow a connection between their Amazon VPC and a private network only if it is coming from an approved network.
+
+Which type of gateway would BEST meet their needs?
+
+Corporate data center using a VPN connection connecting to a virtual private cloud.
+
+
+Internet gateway
+
+
+Virtual private gateway
+
+
+AWS Transit Gateway
+
+
+Amazon API Gateway
+
+
+--------------------------------------------------------------------------------
+
