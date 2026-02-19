@@ -2812,6 +2812,7 @@ class SpreederApp:
         result_win.geometry("700x600")
         result_win.configure(fg_color="#1a1a1a")
         result_win.transient(self.window)
+        result_win.attributes("-topmost", True)
         result_win.lift()
         
         # Bind Escape to close
@@ -3247,6 +3248,7 @@ class SpreederApp:
         shortcuts_win.geometry("400x580")
         shortcuts_win.configure(fg_color="#1a1a1a")
         shortcuts_win.transient(self.window)  # Make it appear on top of parent
+        shortcuts_win.attributes("-topmost", True)
         shortcuts_win.lift()  # Bring to front
         
         # Center the window
@@ -3476,6 +3478,7 @@ Space / Enter       Close and hide window
         clarify_win.geometry("450x180")
         clarify_win.configure(fg_color="#1a1a1a")
         clarify_win.transient(self.window)
+        clarify_win.attributes("-topmost", True)
         clarify_win.lift()
         
         # Center the window
@@ -3586,6 +3589,7 @@ Space / Enter       Close and hide window
         loading_win.geometry("300x100")
         loading_win.configure(fg_color="#1a1a1a")
         loading_win.transient(self.window)
+        loading_win.attributes("-topmost", True)
         
         # Bind Escape to close
         loading_win.bind("<Escape>", lambda e: loading_win.destroy())
@@ -3713,6 +3717,7 @@ Please clarify this for me in a way that helps me truly understand."""
         response_win.geometry("550x500")
         response_win.configure(fg_color="#1a1a1a")
         response_win.transient(self.window)
+        response_win.attributes("-topmost", True)
         response_win.lift()
         
         # Center the window
@@ -4208,7 +4213,7 @@ Please clarify this for me in a way that helps me truly understand."""
         
         # Window dimensions
         window_width = 600
-        window_height = 450  # Slightly taller to accommodate progress bar
+        window_height = 520  # Taller to accommodate both sliders and progress bar
         
         # Get screen dimensions and calculate center position
         screen_width = self.window.winfo_screenwidth()
@@ -5024,6 +5029,7 @@ Please clarify this for me in a way that helps me truly understand."""
         qq_window.geometry("550x320")
         qq_window.configure(fg_color="#1a1a1a")
         qq_window.transient(self.window)
+        qq_window.attributes("-topmost", True)
         qq_window.lift()
         
         # Clear sentinel after window is created
@@ -5359,7 +5365,7 @@ Please clarify this for me in a way that helps me truly understand."""
             btn.bind("<Shift-Tab>", on_window_shift_tab)
             btn.bind("<FocusIn>", lambda e, n=btn_name: on_focus_in(e, n))
             btn.bind("<FocusOut>", lambda e, n=btn_name: on_focus_out(e, n))
-            btn.bind("<Button-1>", lambda e, n=btn_name: on_click(e, n))
+            btn.bind("<Button-1>", lambda e, n=btn_name: on_click(e, n), add="+")
             # Also bind to internal canvas which actually receives focus
             try:
                 if hasattr(btn, '_canvas'):
@@ -5367,7 +5373,7 @@ Please clarify this for me in a way that helps me truly understand."""
                     btn._canvas.bind("<Shift-Tab>", on_window_shift_tab)
                     btn._canvas.bind("<FocusIn>", lambda e, n=btn_name: on_focus_in(e, f"{n}._canvas"))
                     btn._canvas.bind("<FocusOut>", lambda e, n=btn_name: on_focus_out(e, f"{n}._canvas"))
-                    btn._canvas.bind("<Button-1>", lambda e, n=btn_name: on_click(e, f"{n}._canvas"))
+                    btn._canvas.bind("<Button-1>", lambda e, n=btn_name: on_click(e, f"{n}._canvas"), add="+")
             except Exception as ex:
                 debug_log("QQ_BIND_ERROR", f"Failed to bind canvas for {btn_name}", {"error": str(ex)})
             # Also bind to internal text label which can receive focus
@@ -5384,14 +5390,14 @@ Please clarify this for me in a way that helps me truly understand."""
         submit_btn.bind("<Shift-Tab>", on_window_shift_tab)
         submit_btn.bind("<FocusIn>", lambda e: on_focus_in(e, "submit_btn"))
         submit_btn.bind("<FocusOut>", lambda e: on_focus_out(e, "submit_btn"))
-        submit_btn.bind("<Button-1>", lambda e: on_click(e, "submit_btn"))
+        submit_btn.bind("<Button-1>", lambda e: on_click(e, "submit_btn"), add="+")
         try:
             if hasattr(submit_btn, '_canvas'):
                 submit_btn._canvas.bind("<Tab>", on_window_tab)
                 submit_btn._canvas.bind("<Shift-Tab>", on_window_shift_tab)
                 submit_btn._canvas.bind("<FocusIn>", lambda e: on_focus_in(e, "submit_btn._canvas"))
                 submit_btn._canvas.bind("<FocusOut>", lambda e: on_focus_out(e, "submit_btn._canvas"))
-                submit_btn._canvas.bind("<Button-1>", lambda e: on_click(e, "submit_btn._canvas"))
+                submit_btn._canvas.bind("<Button-1>", lambda e: on_click(e, "submit_btn._canvas"), add="+")
         except Exception as ex:
             debug_log("QQ_BIND_ERROR", f"Failed to bind submit canvas", {"error": str(ex)})
         try:
@@ -5403,13 +5409,22 @@ Please clarify this for me in a way that helps me truly understand."""
         except Exception as ex:
             debug_log("QQ_BIND_ERROR", f"Failed to bind submit text_label", {"error": str(ex)})
         
-        # Bind to internal textbox to prevent indent
+        # Define on_return BEFORE binding it
+        def on_return(e):
+            if e.state & 0x1:  # Shift key - allow newline
+                return
+            submit_question()
+            return "break"
+        
+        # Bind to internal textbox to prevent indent AND handle Return key
         try:
             internal = input_text._textbox
             internal.bind("<Tab>", on_window_tab)
             internal.bind("<Shift-Tab>", on_window_shift_tab)
             internal.bind("<FocusIn>", lambda e: on_focus_in(e, "input_text._textbox"))
             internal.bind("<FocusOut>", lambda e: on_focus_out(e, "input_text._textbox"))
+            # Also bind Return key to internal textbox (focus is actually here)
+            internal.bind("<Return>", on_return)
         except AttributeError:
             pass
         
@@ -5426,12 +5441,7 @@ Please clarify this for me in a way that helps me truly understand."""
         
         submit_btn.bind("<Return>", on_button_enter)
         
-        # Bind Enter to submit (but not Shift+Enter) - for textbox only
-        def on_return(e):
-            if e.state & 0x1:  # Shift key - allow newline
-                return
-            submit_question()
-            return "break"
+        # Also bind Enter to the wrapper textbox
         input_text.bind("<Return>", on_return)
         
         debug_log("QUICK_QUESTION", "Dialog created")
@@ -6779,15 +6789,14 @@ Please clarify this for me in a way that helps me truly understand."""
         while self.current_word_index < len(self.formatted_words) and not self.stop_playback:
             word, is_line_break, is_headline = self.formatted_words[self.current_word_index]
             
-            # Display the word
-            self.window.after(0, lambda w=word: self.word_label.configure(text=w))
+            # Display the word using the same method as regular playback
+            self.window.after(0, lambda w=word: self.display_word(w))
             
-            # Update progress
-            progress = (self.current_word_index + 1) / len(self.formatted_words)
-            self.window.after(0, lambda p=progress: self.progress_bar.set(p) if self.progress_bar else None)
-            self.window.after(0, lambda: self.progress_label.configure(
-                text=f"{self.current_word_index + 1}/{len(self.formatted_words)}"
-            ) if self.progress_label else None)
+            # Update progress bar
+            self.window.after(0, self.update_progress_bar)
+            
+            # Force UI update to ensure word displays immediately
+            self.window.after(0, lambda: self.window.update_idletasks())
             
             # Calculate delay
             word_multiplier = self.get_word_length_multiplier(word)
@@ -6834,6 +6843,7 @@ Please clarify this for me in a way that helps me truly understand."""
         answer_win.geometry("600x500")
         answer_win.configure(fg_color="#1a1a1a")
         answer_win.transient(self.window)
+        answer_win.attributes("-topmost", True)
         answer_win.lift()
         
         # Bind Escape to close
@@ -6992,6 +7002,7 @@ Please clarify this for me in a way that helps me truly understand."""
         followup_win.geometry("500x200")
         followup_win.configure(fg_color="#1a1a1a")
         followup_win.transient(self.window)
+        followup_win.attributes("-topmost", True)
         followup_win.lift()
         
         # Bind Escape to close
@@ -8331,6 +8342,8 @@ Generate questions that test understanding, not just recall. Make them challengi
         # Reset quick answer mode (we're in normal clipboard mode now)
         self.quick_answer_mode = False
         self.quick_answer = ""
+        self.pending_quick_answer = None
+        self._on_quick_answer_complete = None
         
         # Reset simplified explanation state (new text = new explanations needed)
         self.simplified_explanations = []
@@ -8598,10 +8611,10 @@ Generate questions that test understanding, not just recall. Make them challengi
             self.word_label.configure(text="No text in clipboard")
             return
         
-        # Ensure quick_answer_mode is off for clipboard reading
-        # (should already be reset by show_window, but extra safety)
-        if not getattr(self, 'quick_answer_mode', False):
-            self.quick_answer_mode = False
+        # Clear any lingering quick answer callbacks to prevent
+        # the quick answer window from appearing after normal playback
+        self._on_quick_answer_complete = None
+        self.pending_quick_answer = None
         
         self.is_playing = True
         self.is_paused = False
@@ -8645,7 +8658,14 @@ Generate questions that test understanding, not just recall. Make them challengi
         Calculate a time multiplier based on word length.
         Short words (1-3 chars) display faster, long words (8+) display longer.
         Returns a multiplier centered around 1.0
+        
+        Exception: Words ending with sentence-ending punctuation (. ! ?) always return 1.0
+        to ensure the full pause delay is applied.
         """
+        # Words ending with sentence-ending punctuation should use full timing
+        if word and word[-1] in '.!?':
+            return 1.0
+        
         # Get word length (strip punctuation for accurate count)
         clean_word = ''.join(c for c in word if c.isalnum())
         length = len(clean_word)
