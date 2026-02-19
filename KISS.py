@@ -6581,7 +6581,7 @@ Please clarify this for me in a way that helps me truly understand."""
         try:
             client = OpenAI(api_key=api_key)
             response = client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=DEFAULT_MODEL,
                 messages=messages,
                 max_tokens=2000,
                 temperature=0.7
@@ -6632,7 +6632,7 @@ Please clarify this for me in a way that helps me truly understand."""
         
         # Update token counter
         if "tokens" in response:
-            cost = estimate_cost(response["tokens"]["input_tokens"], response["tokens"]["output_tokens"], "gpt-4o-mini")
+            cost = estimate_cost(response["tokens"]["input_tokens"], response["tokens"]["output_tokens"], DEFAULT_MODEL)
             self._chat_token_label.configure(
                 text=f"Last: {response['tokens']['total_tokens']} tokens ~{format_cost(cost)}"
             )
