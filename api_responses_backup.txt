@@ -2705,3 +2705,136 @@ To fully grasp the statement about using Direct Connect to link AWS and on-premi
 Using Direct Connect, you can create a dedicated network link between your on-premises infrastructure and AWS. This means that instead of relying on the public internet, which can be unpredictable and slower, you have a private connection that is typically faster and more stable. This is particularly useful for applications that need to operate across both environments seamlessly, such as hybrid cloud applications where some components are hosted on AWS and others are on your local servers. By using Direct Connect, you can ensure that data flows efficiently between these environments without sacrificing performance, making it easier to build and manage applications that leverage both AWS resources and your existing on-premises infrastructure.
 ================================================================================
 
+
+================================================================================
+TIMESTAMP: 2026-02-14 15:44:28
+TYPE: SUMMARY
+MODEL: gpt-4o-mini
+TOKENS: Input=3303 | Output=371 | Total=3674 | Est. Cost: $0.0007
+PROMPT PREVIEW: ================================================================================
+TESTING CURRENT PARAMETERS FROM StockBot.py
+=========================================================================...
+================================================================================
+RESPONSE:
+📌 TITLE: StockBot Trading Simulation Summary
+
+⚡ TL;DR
+**Profit** of $1869.66 over 50 days.
+
+🎯 KEY TAKEAWAYS
+• Total profit from trades: $1869.66  
+  → In plain English: Overall, the trading strategy made $1869.66.  
+• Average daily profit: $37.39  
+  → In plain English: Each day, the strategy earned about $37.39.  
+• Total trades executed: 1608  
+  → In plain English: The bot made 1608 trades during the test.  
+
+📚 TOPIC BREAKDOWN
+StockBot Trading Simulation
+💭 Think of it like: A vending machine that buys and sells snacks based on demand.
+🌍 Real example: Investment firms use algorithms for automated trading.
+• HOW it works: The bot loads trading symbols daily, executes trades based on parameters, and calculates profit and loss (P&L).
+• WHY it matters: Helps traders automate decisions and optimize returns.
+• KEY DETAIL: The bot executed 1608 trades over 50 days.
+
+Trading Parameters
+💭 Think of it like: A recipe with specific ingredients for success.
+🌍 Real example: Hedge funds set strict trading rules to manage risk.
+• HOW it works: Parameters include maximum positions, profit targets, and stop-loss percentages to guide trading decisions.
+• WHY it matters: Ensures disciplined trading and risk management.
+• KEY DETAIL: Profit target set at 3.48%, stop-loss at -1.35%.
+
+💡 SO WHAT?
+• Understanding trading simulations helps evaluate strategies.
+• Apply this knowledge by analyzing your trading parameters for better performance.
+
+🔤 GLOSSARY
+• P&L → Profit and Loss, financial performance measure.
+• MAX_POSITIONS → Maximum number of trades allowed simultaneously.
+================================================================================
+
+
+================================================================================
+TIMESTAMP: 2026-02-14 15:44:48
+TYPE: SUMMARY
+MODEL: gpt-4o-mini
+TOKENS: Input=2843 | Output=342 | Total=3185 | Est. Cost: $0.0006
+PROMPT PREVIEW: Robinhood Legend General Disclosure and Acknowledgement
+
+Robinhood Legend is intended to be a real-time analysis and trading platform. Robinhood Legend may have different features, use different dat...
+================================================================================
+RESPONSE:
+📌 TITLE: Robinhood Legend Overview and Acknowledgment
+
+⚡ TL;DR
+Robinhood Legend offers **tools** for trading analysis, not investment advice.
+
+🎯 KEY TAKEAWAYS
+• Different features from Robinhood app
+  → Robinhood Legend has unique tools and data.
+• Tools are for educational purposes only
+  → Don't use them as investment advice.
+• AI features have specific terms
+  → Additional rules apply to AI tool usage.
+
+📚 TOPIC BREAKDOWN
+Robinhood Legend
+💭 Think of it like: A specialized toolbox for trading.
+🌍 Real example: Robinhood Legend provides analytics for traders.
+• HOW it works: Offers real-time analysis and trading metrics.
+• WHY it matters: Helps users make informed trading decisions.
+• KEY DETAIL: Not all products available in every jurisdiction.
+
+Tools (Metrics and Features)
+💭 Think of it like: A map for navigating investments.
+🌍 Real example: Users access metrics for stock performance.
+• HOW it works: Provides data for educational insights.
+• WHY it matters: Aids in understanding market trends.
+• KEY DETAIL: Not investment advice or recommendations.
+
+Artificial Intelligence Tools
+💭 Think of it like: A smart assistant for trading.
+🌍 Real example: AI tools generate trading suggestions.
+• HOW it works: Uses user inputs to create outputs.
+• WHY it matters: Enhances trading strategies with AI insights.
+• KEY DETAIL: Outputs may not always be accurate.
+
+💡 SO WHAT?
+• Understand limitations of tools for trading.
+• Use insights responsibly and consult professionals.
+
+🔤 GLOSSARY
+• Tools → Features for analysis and metrics.
+• AI → Artificial Intelligence, technology for automation.
+================================================================================
+
+
+================================================================================
+TIMESTAMP: 2026-02-14 16:07:08
+TYPE: SHORTEN_MORE
+MODEL: gpt-4o-mini
+TOKENS: Input=464 | Output=178 | Total=642 | Est. Cost: $0.0002
+PROMPT PREVIEW: Hi Buddy! Thanks so much for reaching out — I’d really appreciate the chance to chat.
+
+Since the contract change in October, I focused heavily on GSOC operational optimization, including:
+
+-Identi...
+================================================================================
+RESPONSE:
+Hi Buddy! Thanks for reaching out—I’d love to chat.
+
+Since the contract change in October, I focused on GSOC operational optimization, including:
+
+- Adapting Symmetry data for KPI tracking and creating macros to present actionable KPIs (see attachment).
+- Developing a temporary app to automate Ontic dispatch filings.
+- Writing an algorithm to map security devices to CCTV cameras for quick updates.
+
+Some of this may have reached you and Matt through leadership discussions, though I couldn't represent my work directly.
+
+Dutch Smith supported my ideas for a higher-impact, client-side role. I’m attaching the KPI document he liked.
+
+I’d prefer a client-side role focused on optimization and tooling, and I’d love to connect soon, as I’ll be relocating to Austin by the end of February as a SOC Manager! 
+
+Tyler Rowden also wrote a recommendation letter for your review. Thanks again!
+================================================================================
+

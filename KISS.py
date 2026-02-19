@@ -1,6 +1,7 @@
 """
 Spreeder - Rapid Serial Visual Presentation App
 A speed reading tool that displays text word by word with fixation point highlighting.
+Runs in background with system tray icon. Press F3 to activate.
 """
 
 import customtkinter as ctk
@@ -9,10 +10,20 @@ import keyboard
 import threading
 import time
 import os
+import sys
 import json
 from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI
+
+# System tray support
+try:
+    import pystray
+    from PIL import Image, ImageDraw
+    TRAY_AVAILABLE = True
+except ImportError:
+    TRAY_AVAILABLE = False
+    print("pystray not available - running without system tray icon")
 
 # Load environment variables
 load_dotenv()
@@ -710,7 +721,7 @@ def run_modifier(modifier_id: str, notes_text: str, context: dict = None) -> tup
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_tokens=modifier["max_tokens"],
+            max_completion_tokens=modifier["max_tokens"],
             temperature=0.4
         )
         
@@ -740,7 +751,7 @@ def run_modifier(modifier_id: str, notes_text: str, context: dict = None) -> tup
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt + correction_suffix}
                 ],
-                max_tokens=modifier["max_tokens"],
+                max_completion_tokens=modifier["max_tokens"],
                 temperature=0.3
             )
             
@@ -892,7 +903,7 @@ Raw notes to synthesize:
                 {"role": "system", "content": BRAIN_SYNTHESIS_SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt}
             ],
-            max_tokens=2000,
+            max_completion_tokens=2000,
             temperature=0.4
         )
         
@@ -962,7 +973,7 @@ def _apply_brain_correctness_gates(client, api_key: str, answer: str, user_promp
                     {"role": "system", "content": BRAIN_SYNTHESIS_SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt + "\n\nReminder: one paragraph only; no headings/bullets/lists."}
                 ],
-                max_tokens=2000,
+                max_completion_tokens=2000,
                 temperature=0.3
             )
             answer = correction_response.choices[0].message.content
@@ -987,7 +998,7 @@ def _apply_brain_correctness_gates(client, api_key: str, answer: str, user_promp
                     {"role": "system", "content": BRAIN_SYNTHESIS_SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt + "\n\nInclude at least 6 'Quick check: …?' prompts spread throughout."}
                 ],
-                max_tokens=2000,
+                max_completion_tokens=2000,
                 temperature=0.3
             )
             answer = correction_response.choices[0].message.content
@@ -1185,6 +1196,140 @@ RULES:
     except Exception as e:
         debug_log("OPENAI_ERROR", f"API call failed: {str(e)}", {"exception": str(e)})
         return f"• Error: {str(e)}"
+
+
+def shorten_text(text: str, level: str = "shorten") -> tuple:
+    """
+    Shorten text using AI while preserving key information.
+    
+    level options:
+    - "shorten": Reduce by ~25%, cover everything
+    - "more": Reduce by ~50%, keep as much meaning as possible
+    - "more!!!": Reduce by ~75%, bare minimum to get the message across
+    
+    Returns: (shortened_text, token_info) or (error_message, None)
+    """
+    debug_log("SHORTEN", f"Shortening text with level: {level}", {
+        "text_length": len(text),
+        "level": level
+    })
+    
+    api_key = os.getenv("OPENAI_API_KEY")
+    
+    if not api_key or api_key == "your_openai_api_key_here":
+        debug_log("SHORTEN_ERROR", "No valid API key found")
+        return "• API key not configured\n• Please add your OpenAI API key to .env file", None
+    
+    # Select approach based on shortening level
+    if level == "shorten":
+        system_prompt = """You are a text condenser. Your job is to shorten text by approximately 25% while covering ALL the same information.
+
+TECHNIQUES TO USE:
+- Remove redundant words and phrases
+- Combine related sentences
+- Use more concise wording
+- Remove filler phrases like "In fact," "Actually," "It's worth noting that"
+- Convert verbose explanations to bullet points where appropriate
+
+RULES:
+- Cover ALL original points - nothing should be lost
+- Keep the same meaning and tone
+- Preserve key technical terms and important details
+- Output should be ~75% the length of the input"""
+        target_ratio = 0.75
+    elif level == "more":
+        system_prompt = """You are a text condenser. Your job is to shorten text by approximately 50% while preserving as much of the original meaning as possible.
+
+TECHNIQUES TO USE:
+- Convert paragraphs to concise bullet points
+- Merge related ideas into single statements
+- Remove examples that aren't essential (keep the best one if needed)
+- Condense explanations to their core message
+- Use shorter synonyms and tighter phrasing
+- Remove any tangential information
+
+RULES:
+- Maintain the core message and key takeaways
+- Keep essential technical details and terms
+- Prioritize the most important information
+- Output should be ~50% the length of the input"""
+        target_ratio = 0.50
+    else:  # more!!!
+        system_prompt = """You are an extreme text condenser. Your job is to shorten text by approximately 75%, pulling out all the stops to get the message across in the shortest way possible.
+
+TECHNIQUES TO USE:
+- Convert everything to ultra-short bullet points (3-7 words each)
+- Keep ONLY the absolutely essential information
+- Use abbreviations where clear (e.g., "w/" for "with", "→" for "leads to")
+- Strip all examples unless critical
+- Remove all context that isn't essential
+- Use fragments instead of full sentences
+- Merge multiple related points into single bullets
+
+RULES:
+- Preserve the CORE message above all else
+- No fluff, no filler, no politeness
+- Technical accuracy must be maintained
+- Every word must earn its place
+- Output should be ~25% the length of the input
+- Aim for maximum information density"""
+        target_ratio = 0.25
+    
+    try:
+        client = OpenAI(api_key=api_key)
+        
+        # Calculate target length
+        word_count = len(text.split())
+        target_words = int(word_count * target_ratio)
+        
+        user_prompt = f"""Shorten the following text to approximately {target_words} words (currently {word_count} words):
+
+---
+{text}
+---
+
+OUTPUT ONLY THE SHORTENED VERSION. No explanations or preamble."""
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            max_tokens=max(500, int(len(text.split()) * target_ratio * 2)),  # Allow some buffer
+            temperature=0.3
+        )
+        
+        shortened = response.choices[0].message.content
+        
+        token_info = {
+            "input_tokens": response.usage.prompt_tokens,
+            "output_tokens": response.usage.completion_tokens,
+            "total_tokens": response.usage.total_tokens,
+            "model": "gpt-4o-mini",
+            "original_words": word_count,
+            "shortened_words": len(shortened.split()),
+            "reduction_percent": round((1 - len(shortened.split()) / word_count) * 100, 1) if word_count > 0 else 0
+        }
+        
+        debug_log("SHORTEN_COMPLETE", f"Text shortened", token_info)
+        
+        # Save backup
+        save_api_response_backup(
+            f"SHORTEN_{level.upper().replace('!', '')}",
+            text[:200],
+            shortened,
+            token_info["input_tokens"],
+            token_info["output_tokens"],
+            token_info["total_tokens"],
+            "gpt-4o-mini"
+        )
+        
+        return shortened, token_info
+        
+    except Exception as e:
+        debug_log("SHORTEN_ERROR", f"API call failed: {str(e)}")
+        return f"• Error: {str(e)}", None
 
 
 def get_simplified_explanations(text: str) -> list:
@@ -1506,6 +1651,644 @@ def setup_button_focus_visuals(buttons, default_colors=None):
     return set_focus, clear_all_focus
 
 
+# ==================== STRATEGY AI ANALYSIS SYSTEM ====================
+
+# Stockbot directory path
+STOCKBOT_DIR = os.path.join(os.path.expanduser("~"), "Desktop", "Stockbot")
+
+# Strategy Analysis Data Files - pointing to Stockbot directory
+STRATEGY_CONFIG_FILE = os.path.join(STOCKBOT_DIR, "best_params.json")
+STOCKBOT_SETTINGS_FILE = os.path.join(STOCKBOT_DIR, "stockbot_settings.json")
+EFFECTIVE_PARAMS_FILE = os.path.join(STOCKBOT_DIR, "effective_params.json")
+STRATEGY_ANALYSIS_LOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "strategy_analysis_log.txt")
+
+# Default Strategy Parameters
+DEFAULT_STRATEGY_PARAMS = {
+    "PROFIT_TARGET_PERCENT": 2.0,
+    "STOP_LOSS_PERCENT": 1.0,
+    "TRAILING_STOP_PERCENT": 0.5,
+    "DEPLOYABLE_CAPITAL_PERCENT": 80.0,
+    "MAX_POSITIONS": 5,
+    "MEDIUM_CONFIDENCE_ALLOCATION": 0.5,
+    "DAILY_LOSS_CIRCUIT_BREAKER_PCT": 3.0,
+    "SMALL_CAP_MIN_PRICE": 5.0,
+    "SMALL_CAP_MAX_PRICE": 50.0,
+    "SMALL_CAP_MIN_VOLUME": 500000,
+    "ATR_THRESHOLD_MIN": 0.5,
+    "ATR_THRESHOLD_MAX": 5.0,
+    "VOLATILITY_FILTER_MIN": 1.5,
+    "VOLATILITY_FILTER_MAX": 8.0,
+    "MIN_RELATIVE_VOLUME": 1.2,
+    "GAP_THRESHOLD_PERCENT": 2.0
+}
+
+# Default Backtest Metrics Structure
+DEFAULT_BACKTEST_METRICS = {
+    "total_pnl": 0.0,
+    "avg_daily_pnl": 0.0,
+    "win_rate": 0.0,
+    "avg_win": 0.0,
+    "avg_loss": 0.0,
+    "risk_reward_ratio": 0.0,
+    "expectancy_per_trade": 0.0,
+    "trades_per_day": 0.0,
+    "exposure_percent": 0.0,
+    "capital_efficiency_ratio": 0.0,
+    "max_drawdown": 0.0,
+    "profit_factor": 0.0,
+    "stop_loss_exits": 0,
+    "target_exits": 0,
+    "trailing_stop_exits": 0,
+    "backtest_days": 50
+}
+
+# Default Trade Ledger Metrics Structure
+DEFAULT_TRADE_METRICS = {
+    "avg_mfe": 0.0,
+    "avg_mae": 0.0,
+    "avg_time_in_trade_minutes": 0.0,
+    "potential_captured_percent": 0.0,
+    "exit_reasons": {"stop_loss": 0, "target": 0, "trailing": 0, "time": 0, "manual": 0},
+    "avg_position_size": 0.0,
+    "total_trades": 0
+}
+
+# Default Regime Metrics Structure
+DEFAULT_REGIME_METRICS = {
+    "avg_daily_atr": 0.0,
+    "atr_percentile_25": 0.0,
+    "atr_percentile_75": 0.0,
+    "avg_volatility_percentile": 50.0,
+    "avg_gap_size_percent": 0.0,
+    "trend_days_percent": 50.0,
+    "chop_days_percent": 50.0,
+    "high_volume_days_percent": 50.0,
+    "low_volume_days_percent": 50.0
+}
+
+# Default Capital Efficiency Metrics
+DEFAULT_CAPITAL_METRICS = {
+    "avg_deployed_capital_percent": 0.0,
+    "avg_idle_capital_percent": 0.0,
+    "exposure_pnl_correlation": 0.0,
+    "first_trade_avg_pnl": 0.0,
+    "later_trade_avg_pnl": 0.0,
+    "position_rank_pnl_correlation": 0.0
+}
+
+STRATEGY_ANALYSIS_SYSTEM_PROMPT = """You are an elite quantitative trading strategist analyzing a live trading strategy that has been validated for structural parity between backtester and live execution.
+
+OBJECTIVE:
+Maximize daily P&L while maintaining realistic slippage, no commission modeling, no leverage, and no forward-looking bias.
+
+REQUIRED ANALYSIS STEPS:
+
+1. DECOMPOSE EXPECTANCY:
+   - Win rate analysis
+   - Average win/loss sizing
+   - Risk:Reward ratio evaluation
+   - Trades per day impact
+   - Calculate expected value per trade
+
+2. IDENTIFY STRUCTURAL BOTTLENECKS:
+   - Are winners being cut too early?
+   - Are stops too tight causing unnecessary losses?
+   - Is the trailing stop truncating large trends?
+   - Is trade frequency too high relative to edge?
+   - Position sizing efficiency
+
+3. PERFORM MFE/MAE ANALYSIS:
+   - Percentage of potential captured
+   - How much larger average winners could be
+   - Whether widening stop increases expectancy
+   - Optimal exit timing analysis
+
+4. EVALUATE CAPITAL EFFICIENCY:
+   - Is exposure limiting growth?
+   - Is MAX_POSITIONS capping upside?
+   - Are late trades (position 4-5) low expectancy?
+   - Correlation between exposure and returns
+
+5. SEGMENT BY VOLATILITY REGIME:
+   - Which days drive profit?
+   - Which days destroy profit?
+   - Would dynamic parameter switching help?
+   - ATR-based adjustments
+
+6. RECOMMEND QUANTIFIED ADJUSTMENTS:
+   - Suggested trailing stop % change (with math)
+   - Suggested stop-loss change (with math)
+   - Suggested target change (with math)
+   - Suggested exposure adjustment
+   - Suggested symbol filtering change
+   - Suggested regime switching logic
+
+7. ESTIMATE NEW PROJECTED DAILY P&L if adjustments applied
+
+HARD RULES - DO NOT:
+- Remove slippage modeling
+- Remove settlement modeling
+- Assume perfect fills
+- Introduce data leakage
+- Suggest unrealistic 2%+ daily returns without mathematical justification
+- Recommend leverage or margin
+
+OUTPUT FORMAT:
+1. **Executive Summary** (3-4 sentences)
+2. **Structural Weaknesses** (bulleted list with specific metrics)
+3. **Missed Profit Opportunities** (quantified analysis)
+4. **Ranked Adjustments** (numbered, with expected impact)
+5. **Estimated Impact Per Adjustment** (table format)
+6. **Risk Tradeoffs** (for each suggestion)
+7. **Projected New Avg Daily P&L** (with confidence range)
+8. **Implementation Priority** (what to change first)
+
+Be specific with numbers. Show your math. Be conservative with projections."""
+
+
+def _find_latest_stockbot_csv(pattern: str) -> str:
+    """Find the most recent CSV file matching pattern in Stockbot directory"""
+    import glob
+    files = glob.glob(os.path.join(STOCKBOT_DIR, f"{pattern}*.csv"))
+    if not files:
+        return None
+    # Sort by modification time, most recent first
+    files.sort(key=os.path.getmtime, reverse=True)
+    return files[0]
+
+
+def load_strategy_config() -> dict:
+    """Load strategy parameters from Stockbot's best_params.json"""
+    try:
+        if os.path.exists(STRATEGY_CONFIG_FILE):
+            with open(STRATEGY_CONFIG_FILE, "r") as f:
+                data = json.load(f)
+                # Extract best_params if nested
+                if "best_params" in data:
+                    config = data["best_params"]
+                else:
+                    config = data
+                debug_log("STRATEGY", f"Loaded strategy config from Stockbot: {STRATEGY_CONFIG_FILE}", 
+                         {"params": list(config.keys())[:10]})
+                return config
+    except Exception as e:
+        debug_log("STRATEGY_ERROR", f"Failed to load strategy config from Stockbot: {e}")
+    return DEFAULT_STRATEGY_PARAMS.copy()
+
+
+def save_strategy_config(config: dict):
+    """Save strategy parameters - saves to local KISS directory to avoid modifying Stockbot"""
+    local_config = os.path.join(os.path.dirname(os.path.abspath(__file__)), "suggested_params.json")
+    try:
+        with open(local_config, "w") as f:
+            json.dump(config, f, indent=2)
+        debug_log("STRATEGY", f"Saved suggested params to {local_config}")
+    except Exception as e:
+        debug_log("STRATEGY_ERROR", f"Failed to save strategy config: {e}")
+
+
+def load_backtest_results() -> dict:
+    """Load backtest results from Stockbot's daily CSV files"""
+    try:
+        # Find most recent daily CSV
+        daily_csv = _find_latest_stockbot_csv("daily_")
+        if not daily_csv:
+            debug_log("STRATEGY", "No daily CSV found in Stockbot directory")
+            return DEFAULT_BACKTEST_METRICS.copy()
+        
+        debug_log("STRATEGY", f"Loading backtest results from {daily_csv}")
+        
+        import csv
+        daily_pnls = []
+        total_trades = 0
+        
+        with open(daily_csv, 'r', newline='') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    pnl = float(row.get('pnl', 0))
+                    trades = int(row.get('trades', 0))
+                    daily_pnls.append(pnl)
+                    total_trades += trades
+                except (ValueError, TypeError):
+                    continue
+        
+        if not daily_pnls:
+            return DEFAULT_BACKTEST_METRICS.copy()
+        
+        # Calculate metrics
+        total_pnl = sum(daily_pnls)
+        avg_daily_pnl = total_pnl / len(daily_pnls) if daily_pnls else 0
+        winning_days = [p for p in daily_pnls if p > 0]
+        losing_days = [p for p in daily_pnls if p < 0]
+        
+        win_rate = (len(winning_days) / len(daily_pnls) * 100) if daily_pnls else 0
+        avg_win = sum(winning_days) / len(winning_days) if winning_days else 0
+        avg_loss = abs(sum(losing_days) / len(losing_days)) if losing_days else 0
+        risk_reward = avg_win / avg_loss if avg_loss > 0 else 0
+        
+        # Calculate max drawdown
+        cumulative = 0
+        peak = 0
+        max_drawdown = 0
+        for pnl in daily_pnls:
+            cumulative += pnl
+            peak = max(peak, cumulative)
+            drawdown = peak - cumulative
+            max_drawdown = max(max_drawdown, drawdown)
+        
+        # Profit factor
+        gross_profit = sum(winning_days) if winning_days else 0
+        gross_loss = abs(sum(losing_days)) if losing_days else 1
+        profit_factor = gross_profit / gross_loss if gross_loss > 0 else 0
+        
+        trades_per_day = total_trades / len(daily_pnls) if daily_pnls else 0
+        expectancy = total_pnl / total_trades if total_trades > 0 else 0
+        
+        metrics = {
+            "total_pnl": total_pnl,
+            "avg_daily_pnl": avg_daily_pnl,
+            "win_rate": win_rate,
+            "avg_win": avg_win,
+            "avg_loss": avg_loss,
+            "risk_reward_ratio": risk_reward,
+            "expectancy_per_trade": expectancy,
+            "trades_per_day": trades_per_day,
+            "exposure_percent": 0,  # Would need position data
+            "capital_efficiency_ratio": total_pnl / 8000 if total_pnl else 0,  # Assuming $8k starting
+            "max_drawdown": max_drawdown,
+            "profit_factor": profit_factor,
+            "stop_loss_exits": 0,  # Will be populated from ledger
+            "target_exits": 0,
+            "trailing_stop_exits": 0,
+            "backtest_days": len(daily_pnls),
+            "_source_file": os.path.basename(daily_csv)
+        }
+        
+        debug_log("STRATEGY", f"Calculated backtest metrics from {len(daily_pnls)} days", metrics)
+        return metrics
+        
+    except Exception as e:
+        debug_log("STRATEGY_ERROR", f"Failed to load backtest results: {e}")
+    return DEFAULT_BACKTEST_METRICS.copy()
+
+
+def load_trade_ledger_metrics() -> dict:
+    """Load trade ledger metrics from Stockbot's ledger CSV files"""
+    try:
+        # Find most recent ledger CSV
+        ledger_csv = _find_latest_stockbot_csv("ledger_")
+        if not ledger_csv:
+            debug_log("STRATEGY", "No ledger CSV found in Stockbot directory")
+            return DEFAULT_TRADE_METRICS.copy()
+        
+        debug_log("STRATEGY", f"Loading trade ledger from {ledger_csv}")
+        
+        import csv
+        
+        exit_reasons = {"stop_loss": 0, "target": 0, "trailing": 0, "time": 0, "manual": 0, "other": 0}
+        position_sizes = []
+        pnl_values = []
+        sell_count = 0
+        
+        with open(ledger_csv, 'r', newline='') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    side = row.get('side', '').upper()
+                    reason = row.get('reason', '').lower()
+                    pnl = row.get('pnl', '')
+                    qty = row.get('qty', 0)
+                    price = row.get('price', 0)
+                    
+                    if side == 'SELL':
+                        sell_count += 1
+                        if pnl:
+                            try:
+                                pnl_values.append(float(pnl))
+                            except:
+                                pass
+                        
+                        # Categorize exit reason
+                        if 'stop' in reason or 'adaptive_stop' in reason:
+                            exit_reasons["stop_loss"] += 1
+                        elif 'target' in reason or 'profit' in reason:
+                            exit_reasons["target"] += 1
+                        elif 'trail' in reason:
+                            exit_reasons["trailing"] += 1
+                        elif 'time' in reason or 'eod' in reason or 'late_day' in reason:
+                            exit_reasons["time"] += 1
+                        else:
+                            exit_reasons["other"] += 1
+                    
+                    if side == 'BUY':
+                        try:
+                            pos_size = float(qty) * float(price)
+                            position_sizes.append(pos_size)
+                        except:
+                            pass
+                            
+                except Exception as row_e:
+                    continue
+        
+        # Calculate metrics
+        avg_position_size = sum(position_sizes) / len(position_sizes) if position_sizes else 0
+        winning_trades = [p for p in pnl_values if p > 0]
+        losing_trades = [p for p in pnl_values if p < 0]
+        
+        metrics = {
+            "total_trades": sell_count,
+            "exit_reasons": exit_reasons,
+            "avg_position_size": avg_position_size,
+            "avg_mfe": 0,  # Would need intraday data
+            "avg_mae": 0,  # Would need intraday data
+            "avg_time_in_trade_minutes": 0,  # Would need timestamp parsing
+            "potential_captured_percent": 0,
+            "winning_trades": len(winning_trades),
+            "losing_trades": len(losing_trades),
+            "avg_win_trade": sum(winning_trades) / len(winning_trades) if winning_trades else 0,
+            "avg_loss_trade": abs(sum(losing_trades) / len(losing_trades)) if losing_trades else 0,
+            "_source_file": os.path.basename(ledger_csv)
+        }
+        
+        debug_log("STRATEGY", f"Calculated trade metrics from {sell_count} trades", metrics)
+        return metrics
+        
+    except Exception as e:
+        debug_log("STRATEGY_ERROR", f"Failed to load trade ledger: {e}")
+    return DEFAULT_TRADE_METRICS.copy()
+
+
+def load_regime_metrics() -> dict:
+    """Load regime/market condition metrics - parsed from trade ledger ATR data"""
+    try:
+        # Try to extract ATR info from ledger entries
+        ledger_csv = _find_latest_stockbot_csv("ledger_")
+        if not ledger_csv:
+            return DEFAULT_REGIME_METRICS.copy()
+        
+        import csv
+        import re
+        
+        atr_values = []
+        rvol_values = []
+        
+        with open(ledger_csv, 'r', newline='') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                reason = row.get('reason', '')
+                # Parse ATR from reason like "Enhanced: Score=2.25, RVOL=2.0x, ATR=0.36%"
+                atr_match = re.search(r'ATR=(\d+\.?\d*)%', reason)
+                rvol_match = re.search(r'RVOL=(\d+\.?\d*)x', reason)
+                
+                if atr_match:
+                    try:
+                        atr_values.append(float(atr_match.group(1)))
+                    except:
+                        pass
+                if rvol_match:
+                    try:
+                        rvol_values.append(float(rvol_match.group(1)))
+                    except:
+                        pass
+        
+        metrics = DEFAULT_REGIME_METRICS.copy()
+        
+        if atr_values:
+            atr_values.sort()
+            metrics["avg_daily_atr"] = sum(atr_values) / len(atr_values)
+            idx_25 = int(len(atr_values) * 0.25)
+            idx_75 = int(len(atr_values) * 0.75)
+            metrics["atr_percentile_25"] = atr_values[idx_25] if idx_25 < len(atr_values) else 0
+            metrics["atr_percentile_75"] = atr_values[idx_75] if idx_75 < len(atr_values) else 0
+        
+        if rvol_values:
+            avg_rvol = sum(rvol_values) / len(rvol_values)
+            high_vol = len([r for r in rvol_values if r > 2.0])
+            metrics["high_volume_days_percent"] = (high_vol / len(rvol_values) * 100) if rvol_values else 50
+            metrics["low_volume_days_percent"] = 100 - metrics["high_volume_days_percent"]
+        
+        debug_log("STRATEGY", f"Calculated regime metrics from {len(atr_values)} ATR samples")
+        return metrics
+        
+    except Exception as e:
+        debug_log("STRATEGY_ERROR", f"Failed to load regime data: {e}")
+    return DEFAULT_REGIME_METRICS.copy()
+
+
+def calculate_capital_efficiency() -> dict:
+    """Calculate capital efficiency metrics from available data"""
+    backtest = load_backtest_results()
+    trades = load_trade_ledger_metrics()
+    
+    metrics = DEFAULT_CAPITAL_METRICS.copy()
+    
+    # Calculate from available data
+    if backtest.get("exposure_percent", 0) > 0:
+        metrics["avg_deployed_capital_percent"] = backtest["exposure_percent"]
+        metrics["avg_idle_capital_percent"] = 100 - backtest["exposure_percent"]
+    
+    # Estimate from trade data
+    if trades.get("avg_position_size", 0) > 0:
+        starting_cash = 8000  # Default from Stockbot
+        estimated_exposure = (trades["avg_position_size"] * 5) / starting_cash * 100  # Assuming avg 5 positions
+        metrics["avg_deployed_capital_percent"] = min(estimated_exposure, 100)
+        metrics["avg_idle_capital_percent"] = 100 - metrics["avg_deployed_capital_percent"]
+    
+    return metrics
+
+
+def build_strategy_analysis_prompt(params: dict, backtest: dict, trades: dict, regime: dict, capital: dict) -> str:
+    """Build the complete analysis prompt with all strategy data from Stockbot"""
+    
+    # Helper to safely format numbers
+    def fmt(val, decimals=2):
+        if val is None or val == 'N/A':
+            return 'N/A'
+        try:
+            if isinstance(val, bool):
+                return str(val)
+            return f"{float(val):.{decimals}f}"
+        except:
+            return str(val)
+    
+    prompt = f"""You are analyzing a live trading strategy with the following data:
+
+═══════════════════════════════════════════════════════════════
+CURRENT STRATEGY PARAMETERS (from Stockbot best_params.json)
+═══════════════════════════════════════════════════════════════
+
+EXIT PARAMETERS:
+• Profit Target: {fmt(params.get('PROFIT_TARGET_PERCENT'))}%
+• Stop Loss: {fmt(params.get('STOP_LOSS_PERCENT'))}%
+• Trailing Stop Enabled: {params.get('TRAILING_STOP_ENABLED', 'N/A')}
+• Trailing Stop: {fmt(params.get('TRAILING_STOP_PERCENT'))}%
+• Min Profit for Trailing: {fmt(params.get('MIN_PROFIT_FOR_TRAILING'))}%
+• ATR Stop Enabled: {params.get('ATR_STOP_ENABLED', False)}
+• ATR Stop Multiplier: {fmt(params.get('ATR_STOP_MULTIPLIER'))}
+• Time Stop Enabled: {params.get('TIME_STOP_ENABLED', False)}
+• Time Stop Minutes: {params.get('TIME_STOP_MINUTES', 'N/A')}
+• Late Day Loss Cut Enabled: {params.get('LATE_DAY_LOSS_CUT_ENABLED', False)}
+• Late Day Loss Cut Threshold: {fmt(params.get('LATE_DAY_LOSS_CUT_THRESHOLD'))}%
+
+POSITION SIZING:
+• Max Positions: {params.get('MAX_POSITIONS', 'N/A')}
+• Deployable Capital: {fmt(params.get('DEPLOYABLE_CAPITAL_PERCENT', 0) * 100 if params.get('DEPLOYABLE_CAPITAL_PERCENT', 0) < 2 else params.get('DEPLOYABLE_CAPITAL_PERCENT', 0))}%
+• Medium Confidence Allocation: {fmt(params.get('MEDIUM_CONFIDENCE_ALLOCATION'))}
+• Starting Cash: ${params.get('STARTING_CASH', 8000):,.0f}
+• Min Actual Deployed Dollars: ${params.get('MIN_ACTUAL_DEPLOYED_DOLLARS', 'N/A')}
+• Small Cap Max Position %: {fmt(params.get('SMALL_CAP_MAX_POSITION_PCT', 0) * 100)}%
+• Volatility Adjusted Sizing: {params.get('VOLATILITY_ADJUSTED_SIZING', False)}
+• Target Volatility %: {fmt(params.get('TARGET_VOLATILITY_PCT'))}%
+
+ENTRY FILTERS:
+• RVOL Threshold: {fmt(params.get('RVOL_THRESHOLD'))}x
+• True RVOL Threshold: {fmt(params.get('TRUE_RVOL_THRESHOLD'))}x
+• Breakout Threshold: {fmt(params.get('BREAKOUT_THRESHOLD_PERCENT'))}%
+• Gap Threshold: {fmt(params.get('GAP_THRESHOLD_PERCENT'))}%
+• Min Price Volatility (ATR%): {fmt(params.get('MIN_PRICE_VOLATILITY_ATR_PCT'))}%
+• Volume Surge Multiplier: {fmt(params.get('VOLUME_SURGE_MULTIPLIER'))}x
+• Early Liquidity Threshold: {fmt(params.get('EARLY_LIQUIDITY_THRESHOLD'))}
+
+PRICE FILTERS:
+• Min Trade Price: ${fmt(params.get('MIN_TRADE_PRICE'))}
+• Max Small Cap Price: ${fmt(params.get('MAX_SMALL_CAP_PRICE'))}
+• Max Large Cap Price: ${params.get('MAX_LARGE_CAP_PRICE', 'N/A')}
+• Max Trade Price Hard Cap: ${params.get('MAX_TRADE_PRICE_HARD_CAP', 'N/A')}
+• Max Price for Standard Allocation: ${params.get('MAX_PRICE_FOR_STANDARD_ALLOCATION', 'N/A')}
+
+SMALL-CAP SPECIFIC:
+• Min ATR% for Small Caps: {fmt(params.get('MIN_ATR_PERCENT_SMALLCAP'))}%
+• Max Spread %: {fmt(params.get('MAX_SPREAD_PERCENT'))}%
+• Min Avg Volume Per Bar: {params.get('MIN_AVG_VOLUME_PER_BAR', 'N/A')}
+
+RISK MANAGEMENT:
+• Daily Loss Circuit Breaker: ${params.get('DAILY_LOSS_CIRCUIT_BREAKER', 'N/A')}
+• Daily Loss Circuit Breaker %: {fmt(params.get('DAILY_LOSS_CIRCUIT_BREAKER_PCT'))}%
+• Symbol Circuit Breaker Enabled: {params.get('SYMBOL_CIRCUIT_BREAKER_ENABLED', False)}
+• Symbol Max Stopouts/Day: {params.get('SYMBOL_MAX_STOPOUTS_PER_DAY', 'N/A')}
+• Symbol Max Loss/Day: ${params.get('SYMBOL_MAX_LOSS_PER_DAY', 'N/A')}
+• Max Buys Per Symbol/Day: {params.get('MAX_BUYS_PER_SYMBOL_PER_DAY', 'N/A')}
+
+EXECUTION:
+• Slippage (BPS): {fmt(params.get('SLIPPAGE_BPS'))}
+• Max Volume Ratio: {fmt(params.get('MAX_VOLUME_RATIO'))}
+• Commission Per Order: ${fmt(params.get('COMMISSION_PER_ORDER'))}
+• Min Shares Per Trade: {params.get('MIN_SHARES_PER_TRADE', 'N/A')}
+• Adaptive Stop Cutoff Price: ${fmt(params.get('ADAPTIVE_STOP_CUTOFF_PRICE'))}
+
+═══════════════════════════════════════════════════════════════
+BACKTEST RESULTS ({backtest.get('backtest_days', 50)}-DAY)
+Source: {backtest.get('_source_file', 'N/A')}
+═══════════════════════════════════════════════════════════════
+• Total P&L: ${backtest.get('total_pnl', 0):,.2f}
+• Avg Daily P&L: ${backtest.get('avg_daily_pnl', 0):,.2f}
+• Win Rate (days): {backtest.get('win_rate', 0):.1f}%
+• Average Winning Day: ${backtest.get('avg_win', 0):,.2f}
+• Average Losing Day: ${backtest.get('avg_loss', 0):,.2f}
+• Risk:Reward Ratio: {backtest.get('risk_reward_ratio', 0):.2f}
+• Expectancy Per Trade: ${backtest.get('expectancy_per_trade', 0):,.2f}
+• Trades Per Day: {backtest.get('trades_per_day', 0):.1f}
+• Capital Efficiency: {backtest.get('capital_efficiency_ratio', 0):.4f}
+• Max Drawdown: ${backtest.get('max_drawdown', 0):,.2f}
+• Profit Factor: {backtest.get('profit_factor', 0):.2f}
+
+═══════════════════════════════════════════════════════════════
+TRADE-LEVEL METRICS
+Source: {trades.get('_source_file', 'N/A')}
+═══════════════════════════════════════════════════════════════
+• Total Trades Analyzed: {trades.get('total_trades', 0)}
+• Winning Trades: {trades.get('winning_trades', 0)}
+• Losing Trades: {trades.get('losing_trades', 0)}
+• Avg Win (per trade): ${trades.get('avg_win_trade', 0):,.2f}
+• Avg Loss (per trade): ${trades.get('avg_loss_trade', 0):,.2f}
+• Avg Position Size: ${trades.get('avg_position_size', 0):,.2f}
+
+Exit Reasons Distribution:
+• Stop Loss: {trades.get('exit_reasons', {}).get('stop_loss', 0)}
+• Target/Profit: {trades.get('exit_reasons', {}).get('target', 0)}
+• Trailing Stop: {trades.get('exit_reasons', {}).get('trailing', 0)}
+• Time-based/EOD: {trades.get('exit_reasons', {}).get('time', 0)}
+• Other: {trades.get('exit_reasons', {}).get('other', 0)}
+
+═══════════════════════════════════════════════════════════════
+REGIME/VOLATILITY METRICS (from trade data)
+═══════════════════════════════════════════════════════════════
+• Avg ATR%: {regime.get('avg_daily_atr', 0):.2f}%
+• ATR 25th Percentile: {regime.get('atr_percentile_25', 0):.2f}%
+• ATR 75th Percentile: {regime.get('atr_percentile_75', 0):.2f}%
+• High Volume Days: {regime.get('high_volume_days_percent', 50):.0f}%
+• Low Volume Days: {regime.get('low_volume_days_percent', 50):.0f}%
+
+═══════════════════════════════════════════════════════════════
+CAPITAL EFFICIENCY METRICS
+═══════════════════════════════════════════════════════════════
+• Avg Deployed Capital: {capital.get('avg_deployed_capital_percent', 0):.1f}%
+• Avg Idle Capital: {capital.get('avg_idle_capital_percent', 0):.1f}%
+
+═══════════════════════════════════════════════════════════════
+
+Based on this data, provide your complete analysis following the required format."""
+
+    return prompt
+
+
+def save_analysis_report(report: str, params: dict, timestamp: str):
+    """Save the analysis report to the Augmentation folder"""
+    try:
+        filename = f"strategy_analysis_{timestamp.replace(':', '-').replace(' ', '_')}.md"
+        filepath = os.path.join(AUGMENTATION_DIR, filename)
+        
+        content = f"""# AI Strategy Optimization Report
+Generated: {timestamp}
+
+## Parameters Analyzed
+```json
+{json.dumps(params, indent=2)}
+```
+
+## Analysis
+{report}
+"""
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(content)
+        
+        debug_log("STRATEGY", f"Saved analysis report to {filepath}")
+        return filepath
+    except Exception as e:
+        debug_log("STRATEGY_ERROR", f"Failed to save analysis report: {e}")
+        return None
+
+
+def parse_suggested_changes(report: str) -> dict:
+    """Parse suggested parameter changes from the AI report"""
+    import re
+    
+    changes = {}
+    
+    # Look for patterns like "trailing stop: X%" or "change stop loss to Y%"
+    patterns = {
+        "TRAILING_STOP_PERCENT": r"trailing\s*stop.*?(\d+\.?\d*)\s*%",
+        "STOP_LOSS_PERCENT": r"stop[\s-]*loss.*?(\d+\.?\d*)\s*%",
+        "PROFIT_TARGET_PERCENT": r"(?:profit\s*)?target.*?(\d+\.?\d*)\s*%",
+        "MAX_POSITIONS": r"max\s*positions?.*?(\d+)",
+        "DEPLOYABLE_CAPITAL_PERCENT": r"(?:deployable\s*)?capital.*?(\d+\.?\d*)\s*%",
+    }
+    
+    for param, pattern in patterns.items():
+        matches = re.findall(pattern, report.lower())
+        if matches:
+            try:
+                # Take the last mentioned value as the suggested change
+                value = float(matches[-1])
+                changes[param] = value
+            except ValueError:
+                pass
+    
+    debug_log("STRATEGY", f"Parsed suggested changes: {changes}")
+    return changes
+
+
 # ==================== MAIN APPLICATION CLASS ====================
 
 class SpreederApp:
@@ -1596,9 +2379,18 @@ class SpreederApp:
             keyboard.on_press_key("f3", self.on_f3_pressed)
             keyboard.add_hotkey("ctrl+alt+n", self.on_global_save_note)
             keyboard.add_hotkey("ctrl+alt+q", self.on_global_quiz)
+            keyboard.add_hotkey("ctrl+alt+s", self.on_global_shorten)
+            keyboard.add_hotkey("ctrl+shift+a", self.on_global_strategy_analysis)
+            keyboard.add_hotkey("ctrl+alt+g", self.on_global_chat)
             debug_log("HOTKEY", "Global hotkeys registered successfully")
         except Exception as e:
             debug_log("HOTKEY_ERROR", f"Failed to register hotkey: {str(e)}")
+    
+    def on_global_strategy_analysis(self):
+        """Handle global Ctrl+Shift+A press - AI Strategy Analysis"""
+        debug_log("HOTKEY", "Global Ctrl+Shift+A pressed - Strategy Analysis")
+        if self.window:
+            self.window.after(0, self.open_strategy_analysis_window)
     
     def on_global_save_note(self):
         """Handle global Ctrl+Alt+N press"""
@@ -1611,6 +2403,18 @@ class SpreederApp:
         debug_log("HOTKEY", "Global Ctrl+Alt+Q pressed")
         if self.window:
             self.window.after(0, self._show_quiz_file_selector)
+    
+    def on_global_shorten(self):
+        """Handle global Ctrl+Alt+S press"""
+        debug_log("HOTKEY", "Global Ctrl+Alt+S pressed")
+        if self.window:
+            self.window.after(0, self._show_shorten_dialog)
+    
+    def on_global_chat(self):
+        """Handle global Ctrl+Alt+G press - Open ChatGPT window"""
+        debug_log("HOTKEY", "Global Ctrl+Alt+G pressed - Chat Window")
+        if self.window:
+            self.window.after(0, self._show_chat_window)
     
     def on_f3_pressed(self, event):
         """Handle F3 key press - use after() to safely call from hotkey thread"""
@@ -4635,6 +5439,1218 @@ Please clarify this for me in a way that helps me truly understand."""
         # Log all visible elements after dialog is ready
         qq_window.after(100, lambda: log_visible_elements(qq_window, "Quick Question"))
     
+    def _show_shorten_dialog(self):
+        """Show shorten dialog with three shortening levels"""
+        # Check if dialog window already exists
+        if hasattr(self, '_shorten_dialog_window') and self._shorten_dialog_window:
+            try:
+                if self._shorten_dialog_window.winfo_exists():
+                    debug_log("SHORTEN", "Debounced - dialog window already exists")
+                    self._shorten_dialog_window.lift()
+                    self._shorten_dialog_window.focus_force()
+                    return
+            except:
+                pass
+        
+        debug_log("SHORTEN", "Opening shorten dialog")
+        
+        # Create dialog window
+        shorten_win = ctk.CTkToplevel(self.window)
+        self._shorten_dialog_window = shorten_win
+        shorten_win.title("✂️ Shorten Text")
+        shorten_win.geometry("600x400")
+        shorten_win.configure(fg_color="#1a1a1a")
+        shorten_win.transient(self.window)
+        shorten_win.lift()
+        shorten_win.attributes("-topmost", True)
+        
+        # Clear reference when window is closed
+        def on_dialog_close():
+            self._shorten_dialog_window = None
+            shorten_win.destroy()
+        
+        shorten_win.protocol("WM_DELETE_WINDOW", on_dialog_close)
+        shorten_win.bind("<Escape>", lambda e: on_dialog_close())
+        
+        # Center the window
+        screen_width = shorten_win.winfo_screenwidth()
+        screen_height = shorten_win.winfo_screenheight()
+        x = (screen_width - 600) // 2
+        y = (screen_height - 400) // 2
+        shorten_win.geometry(f"600x400+{x}+{y}")
+        
+        # Title
+        title_label = ctk.CTkLabel(
+            shorten_win,
+            text="✂️ Shorten Text",
+            font=("Segoe UI", 16, "bold"),
+            text_color="#FF6B00"
+        )
+        title_label.pack(pady=(15, 5))
+        
+        # Instruction
+        instruction_label = ctk.CTkLabel(
+            shorten_win,
+            text="Paste or type text to shorten while preserving key information",
+            font=("Segoe UI", 10),
+            text_color="#888888"
+        )
+        instruction_label.pack(pady=(0, 10))
+        
+        # Input textbox
+        input_text = ctk.CTkTextbox(
+            shorten_win,
+            width=560,
+            height=200,
+            font=("Segoe UI", 11),
+            fg_color="#2a2a2a",
+            text_color="white",
+            wrap="word"
+        )
+        input_text.pack(padx=20, pady=(0, 15))
+        input_text.focus()
+        
+        # Try to paste clipboard content if it looks like text
+        try:
+            clipboard = pyperclip.paste()
+            if clipboard and len(clipboard) > 20 and len(clipboard) < 50000:
+                input_text.insert("1.0", clipboard)
+                input_text.mark_set("insert", "1.0")
+        except:
+            pass
+        
+        # Button frame
+        btn_frame = ctk.CTkFrame(shorten_win, fg_color="transparent")
+        btn_frame.pack(pady=(0, 15))
+        
+        def do_shorten(level: str):
+            text = input_text.get("1.0", "end-1c").strip()
+            if not text:
+                return
+            on_dialog_close()
+            self._process_shorten_request(text, level)
+        
+        # Shorten button (25% reduction)
+        btn_shorten = ctk.CTkButton(
+            btn_frame,
+            text="✂️ Shorten\n(~25% shorter)",
+            width=150,
+            height=50,
+            font=("Segoe UI", 11),
+            fg_color="#2a7d2e",
+            hover_color="#3a9d3e",
+            command=lambda: do_shorten("shorten")
+        )
+        btn_shorten.pack(side="left", padx=8)
+        
+        # More button (50% reduction)
+        btn_more = ctk.CTkButton(
+            btn_frame,
+            text="📉 More\n(~50% shorter)",
+            width=150,
+            height=50,
+            font=("Segoe UI", 11),
+            fg_color="#7d6a2a",
+            hover_color="#9d8a3a",
+            command=lambda: do_shorten("more")
+        )
+        btn_more.pack(side="left", padx=8)
+        
+        # MORE!!! button (75% reduction)
+        btn_more_extreme = ctk.CTkButton(
+            btn_frame,
+            text="⚡ MORE!!!\n(~75% shorter)",
+            width=150,
+            height=50,
+            font=("Segoe UI", 11, "bold"),
+            fg_color="#7d2a2a",
+            hover_color="#9d3a3a",
+            command=lambda: do_shorten("more!!!")
+        )
+        btn_more_extreme.pack(side="left", padx=8)
+        
+        # Tip label
+        tip_label = ctk.CTkLabel(
+            shorten_win,
+            text="💡 Tip: Select text in any app, then use Ctrl+Alt+S to open this dialog",
+            font=("Segoe UI", 9),
+            text_color="#666666"
+        )
+        tip_label.pack(pady=(5, 10))
+        
+        debug_log("SHORTEN", "Dialog created")
+    
+    def _process_shorten_request(self, text: str, level: str):
+        """Process shorten request with selected level"""
+        debug_log("SHORTEN", f"Processing shorten request with level: {level}", {
+            "text_length": len(text),
+            "word_count": len(text.split())
+        })
+        
+        # Show the main window with loading state
+        self._show_window_minimal()
+        
+        level_names = {
+            "shorten": "Shorten (~25%)",
+            "more": "More (~50%)",
+            "more!!!": "MORE!!! (~75%)"
+        }
+        
+        self.word_label.configure(text="✂️ Shortening...")
+        self.status_label.configure(text=f"Applying {level_names.get(level, level)}...")
+        
+        def do_shorten_api():
+            result, token_info = shorten_text(text, level)
+            self.window.after(0, lambda: self._show_shorten_result(text, result, token_info, level))
+        
+        thread = threading.Thread(target=do_shorten_api, daemon=True)
+        thread.start()
+    
+    def _show_shorten_result(self, original: str, shortened: str, token_info: dict, level: str):
+        """Display shortened text result"""
+        debug_log("SHORTEN_RESULT", f"Displaying {level} result", {
+            "original_length": len(original),
+            "shortened_length": len(shortened),
+            "tokens": token_info
+        })
+        
+        level_emojis = {
+            "shorten": "✂️",
+            "more": "📉",
+            "more!!!": "⚡"
+        }
+        level_names = {
+            "shorten": "Shortened (~25%)",
+            "more": "More (~50%)",
+            "more!!!": "MORE!!! (~75%)"
+        }
+        
+        # Create result window
+        result_win = ctk.CTkToplevel(self.window)
+        result_win.title(f"{level_emojis.get(level, '✂️')} {level_names.get(level, 'Shortened')} Result")
+        result_win.geometry("750x650")
+        result_win.configure(fg_color="#1a1a1a")
+        result_win.transient(self.window)
+        result_win.lift()
+        
+        # Bind Escape to close
+        result_win.bind("<Escape>", lambda e: result_win.destroy())
+        
+        # Center the window
+        screen_width = result_win.winfo_screenwidth()
+        screen_height = result_win.winfo_screenheight()
+        x = (screen_width - 750) // 2
+        y = (screen_height - 650) // 2
+        result_win.geometry(f"750x650+{x}+{y}")
+        
+        # Header with stats
+        header_frame = ctk.CTkFrame(result_win, fg_color="transparent")
+        header_frame.pack(fill="x", padx=20, pady=(15, 5))
+        
+        title_label = ctk.CTkLabel(
+            header_frame,
+            text=f"{level_emojis.get(level, '✂️')} {level_names.get(level, 'Shortened')}",
+            font=("Segoe UI", 16, "bold"),
+            text_color="#FF6B00"
+        )
+        title_label.pack(side="left")
+        
+        # Stats
+        if token_info:
+            orig_words = token_info.get('original_words', len(original.split()))
+            short_words = token_info.get('shortened_words', len(shortened.split()))
+            reduction = token_info.get('reduction_percent', round((1 - short_words / orig_words) * 100, 1) if orig_words > 0 else 0)
+            
+            stats_label = ctk.CTkLabel(
+                header_frame,
+                text=f"{orig_words} → {short_words} words ({reduction}% shorter)",
+                font=("Segoe UI", 11),
+                text_color="#4CAF50"
+            )
+            stats_label.pack(side="right")
+        
+        # Result text area
+        result_text = ctk.CTkTextbox(
+            result_win,
+            width=710,
+            height=450,
+            font=("Segoe UI", 12),
+            fg_color="#2a2a2a",
+            text_color="white",
+            wrap="word"
+        )
+        result_text.pack(padx=20, pady=10)
+        result_text.insert("1.0", shortened)
+        
+        # Apply markdown formatting if available
+        if hasattr(self, '_apply_markdown_formatting'):
+            self._apply_markdown_formatting(result_text)
+        
+        # Store for actions
+        self._shorten_original = original
+        self._shorten_result = shortened
+        
+        # Button frame
+        btn_frame = ctk.CTkFrame(result_win, fg_color="transparent")
+        btn_frame.pack(pady=10)
+        
+        def copy_result():
+            pyperclip.copy(shortened)
+            copy_btn.configure(text="✓ Copied!")
+            result_win.after(1500, lambda: copy_btn.configure(text="📋 Copy"))
+        
+        def show_comparison():
+            """Show side-by-side comparison"""
+            comp_win = ctk.CTkToplevel(result_win)
+            comp_win.title("📊 Comparison: Original vs Shortened")
+            comp_win.geometry("1000x600")
+            comp_win.configure(fg_color="#1a1a1a")
+            comp_win.transient(result_win)
+            comp_win.lift()
+            comp_win.bind("<Escape>", lambda e: comp_win.destroy())
+            
+            # Center
+            cx = (result_win.winfo_screenwidth() - 1000) // 2
+            cy = (result_win.winfo_screenheight() - 600) // 2
+            comp_win.geometry(f"1000x600+{cx}+{cy}")
+            
+            # Side by side frames
+            main_frame = ctk.CTkFrame(comp_win, fg_color="transparent")
+            main_frame.pack(fill="both", expand=True, padx=15, pady=15)
+            
+            # Original side
+            orig_frame = ctk.CTkFrame(main_frame, fg_color="#252525")
+            orig_frame.pack(side="left", fill="both", expand=True, padx=(0, 5))
+            
+            orig_label = ctk.CTkLabel(
+                orig_frame,
+                text=f"📄 Original ({len(original.split())} words)",
+                font=("Segoe UI", 12, "bold"),
+                text_color="#888888"
+            )
+            orig_label.pack(pady=(10, 5))
+            
+            orig_text = ctk.CTkTextbox(
+                orig_frame,
+                font=("Segoe UI", 11),
+                fg_color="#2a2a2a",
+                text_color="white",
+                wrap="word"
+            )
+            orig_text.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+            orig_text.insert("1.0", original)
+            
+            # Shortened side
+            short_frame = ctk.CTkFrame(main_frame, fg_color="#252525")
+            short_frame.pack(side="right", fill="both", expand=True, padx=(5, 0))
+            
+            short_label = ctk.CTkLabel(
+                short_frame,
+                text=f"✂️ Shortened ({len(shortened.split())} words)",
+                font=("Segoe UI", 12, "bold"),
+                text_color="#4CAF50"
+            )
+            short_label.pack(pady=(10, 5))
+            
+            short_text = ctk.CTkTextbox(
+                short_frame,
+                font=("Segoe UI", 11),
+                fg_color="#2a2a2a",
+                text_color="white",
+                wrap="word"
+            )
+            short_text.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+            short_text.insert("1.0", shortened)
+        
+        def close_result():
+            result_win.destroy()
+            self.hide_window()
+        
+        def shorten_again():
+            """Open shorten dialog with the result pre-filled"""
+            result_win.destroy()
+            self.hide_window()
+            self.window.after(100, lambda: self._show_shorten_dialog_with_text(shortened))
+        
+        copy_btn = ctk.CTkButton(
+            btn_frame,
+            text="📋 Copy",
+            width=100,
+            height=32,
+            font=("Segoe UI", 11),
+            fg_color="#3a3a3a",
+            hover_color="#4a4a4a",
+            command=copy_result
+        )
+        copy_btn.pack(side="left", padx=5)
+        
+        compare_btn = ctk.CTkButton(
+            btn_frame,
+            text="📊 Compare",
+            width=100,
+            height=32,
+            font=("Segoe UI", 11),
+            fg_color="#3a3a3a",
+            hover_color="#4a4a4a",
+            command=show_comparison
+        )
+        compare_btn.pack(side="left", padx=5)
+        
+        again_btn = ctk.CTkButton(
+            btn_frame,
+            text="✂️ Shorten More",
+            width=120,
+            height=32,
+            font=("Segoe UI", 11),
+            fg_color="#2a7d2e",
+            hover_color="#3a9d3e",
+            command=shorten_again
+        )
+        again_btn.pack(side="left", padx=5)
+        
+        close_btn = ctk.CTkButton(
+            btn_frame,
+            text="Close",
+            width=80,
+            height=32,
+            font=("Segoe UI", 11),
+            fg_color="#5a5a5a",
+            hover_color="#6a6a6a",
+            command=close_result
+        )
+        close_btn.pack(side="left", padx=5)
+        
+        # Token info at bottom
+        if token_info:
+            cost = estimate_cost(token_info.get('input_tokens', 0), token_info.get('output_tokens', 0), token_info.get('model', 'gpt-4o-mini'))
+            token_label = ctk.CTkLabel(
+                result_win,
+                text=f"Tokens: {token_info.get('total_tokens', 0)} ~{format_cost(cost)}",
+                font=("Segoe UI", 9),
+                text_color="#666666"
+            )
+            token_label.pack(pady=(0, 10))
+    
+    def _show_shorten_dialog_with_text(self, prefill_text: str):
+        """Show shorten dialog with pre-filled text"""
+        # Similar to _show_shorten_dialog but with text pre-filled
+        if hasattr(self, '_shorten_dialog_window') and self._shorten_dialog_window:
+            try:
+                if self._shorten_dialog_window.winfo_exists():
+                    self._shorten_dialog_window.destroy()
+            except:
+                pass
+        
+        debug_log("SHORTEN", "Opening shorten dialog with prefilled text")
+        
+        # Create dialog window
+        shorten_win = ctk.CTkToplevel(self.window)
+        self._shorten_dialog_window = shorten_win
+        shorten_win.title("✂️ Shorten Text")
+        shorten_win.geometry("600x400")
+        shorten_win.configure(fg_color="#1a1a1a")
+        shorten_win.transient(self.window)
+        shorten_win.lift()
+        shorten_win.attributes("-topmost", True)
+        
+        def on_dialog_close():
+            self._shorten_dialog_window = None
+            shorten_win.destroy()
+        
+        shorten_win.protocol("WM_DELETE_WINDOW", on_dialog_close)
+        shorten_win.bind("<Escape>", lambda e: on_dialog_close())
+        
+        screen_width = shorten_win.winfo_screenwidth()
+        screen_height = shorten_win.winfo_screenheight()
+        x = (screen_width - 600) // 2
+        y = (screen_height - 400) // 2
+        shorten_win.geometry(f"600x400+{x}+{y}")
+        
+        title_label = ctk.CTkLabel(
+            shorten_win,
+            text="✂️ Shorten Again",
+            font=("Segoe UI", 16, "bold"),
+            text_color="#FF6B00"
+        )
+        title_label.pack(pady=(15, 5))
+        
+        instruction_label = ctk.CTkLabel(
+            shorten_win,
+            text="Continue shortening the result",
+            font=("Segoe UI", 10),
+            text_color="#888888"
+        )
+        instruction_label.pack(pady=(0, 10))
+        
+        input_text = ctk.CTkTextbox(
+            shorten_win,
+            width=560,
+            height=200,
+            font=("Segoe UI", 11),
+            fg_color="#2a2a2a",
+            text_color="white",
+            wrap="word"
+        )
+        input_text.pack(padx=20, pady=(0, 15))
+        input_text.insert("1.0", prefill_text)
+        input_text.focus()
+        
+        btn_frame = ctk.CTkFrame(shorten_win, fg_color="transparent")
+        btn_frame.pack(pady=(0, 15))
+        
+        def do_shorten(level: str):
+            text = input_text.get("1.0", "end-1c").strip()
+            if not text:
+                return
+            on_dialog_close()
+            self._process_shorten_request(text, level)
+        
+        btn_shorten = ctk.CTkButton(
+            btn_frame,
+            text="✂️ Shorten\n(~25% shorter)",
+            width=150,
+            height=50,
+            font=("Segoe UI", 11),
+            fg_color="#2a7d2e",
+            hover_color="#3a9d3e",
+            command=lambda: do_shorten("shorten")
+        )
+        btn_shorten.pack(side="left", padx=8)
+        
+        btn_more = ctk.CTkButton(
+            btn_frame,
+            text="📉 More\n(~50% shorter)",
+            width=150,
+            height=50,
+            font=("Segoe UI", 11),
+            fg_color="#7d6a2a",
+            hover_color="#9d8a3a",
+            command=lambda: do_shorten("more")
+        )
+        btn_more.pack(side="left", padx=8)
+        
+        btn_more_extreme = ctk.CTkButton(
+            btn_frame,
+            text="⚡ MORE!!!\n(~75% shorter)",
+            width=150,
+            height=50,
+            font=("Segoe UI", 11, "bold"),
+            fg_color="#7d2a2a",
+            hover_color="#9d3a3a",
+            command=lambda: do_shorten("more!!!")
+        )
+        btn_more_extreme.pack(side="left", padx=8)
+    
+    # ==================== CHAT WINDOW ====================
+    
+    def _show_chat_window(self):
+        """Show the ChatGPT-style conversation window"""
+        # Check if window already exists
+        if hasattr(self, '_chat_window') and self._chat_window:
+            try:
+                if self._chat_window.winfo_exists():
+                    self._chat_window.lift()
+                    self._chat_window.focus_force()
+                    return
+            except:
+                pass
+        
+        debug_log("CHAT", "Opening chat window")
+        
+        # Initialize chat state
+        self._chat_messages = []  # Full message history: [{"role": "user/assistant", "content": "...", "timestamp": "..."}]
+        self._chat_context_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_context.txt")
+        self._chat_history_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_history.json")
+        self._chat_history_expanded = False
+        self._chat_quick_modifiers = {}  # Track which modifiers are active
+        
+        # Load existing history if any
+        self._load_chat_history()
+        
+        # Create main chat window
+        self._chat_window = ctk.CTkToplevel(self.window)
+        self._chat_window.title("💬 Chat")
+        self._chat_window.geometry("800x700")
+        self._chat_window.configure(fg_color="#1a1a1a")
+        self._chat_window.attributes("-topmost", True)
+        
+        # Center the window
+        screen_width = self._chat_window.winfo_screenwidth()
+        screen_height = self._chat_window.winfo_screenheight()
+        x = (screen_width - 800) // 2
+        y = (screen_height - 700) // 2
+        self._chat_window.geometry(f"800x700+{x}+{y}")
+        
+        def on_close():
+            self._save_chat_history()
+            self._chat_window.destroy()
+            self._chat_window = None
+        
+        self._chat_window.protocol("WM_DELETE_WINDOW", on_close)
+        self._chat_window.bind("<Escape>", lambda e: on_close())
+        
+        # Title bar with context indicator
+        title_frame = ctk.CTkFrame(self._chat_window, fg_color="#2a2a2a", height=50)
+        title_frame.pack(fill="x", padx=10, pady=(10, 5))
+        title_frame.pack_propagate(False)
+        
+        title_label = ctk.CTkLabel(
+            title_frame,
+            text="💬 Chat",
+            font=("Segoe UI", 16, "bold"),
+            text_color="#FF6B00"
+        )
+        title_label.pack(side="left", padx=15, pady=10)
+        
+        # Context file indicator/button
+        self._chat_context_btn = ctk.CTkButton(
+            title_frame,
+            text="📋 Context",
+            width=100,
+            height=28,
+            font=("Segoe UI", 10),
+            fg_color="#3a5a3a" if os.path.exists(self._chat_context_file) else "#4a4a4a",
+            hover_color="#4a6a4a",
+            command=self._edit_chat_context
+        )
+        self._chat_context_btn.pack(side="right", padx=10, pady=10)
+        
+        # New chat button
+        new_chat_btn = ctk.CTkButton(
+            title_frame,
+            text="🔄 New",
+            width=70,
+            height=28,
+            font=("Segoe UI", 10),
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=self._new_chat
+        )
+        new_chat_btn.pack(side="right", padx=5, pady=10)
+        
+        # History toggle (collapsible for older messages)
+        self._history_frame = ctk.CTkFrame(self._chat_window, fg_color="#252525")
+        self._history_frame.pack(fill="x", padx=10, pady=(0, 5))
+        
+        self._history_toggle_btn = ctk.CTkButton(
+            self._history_frame,
+            text=f"📜 History ({max(0, len(self._chat_messages) - 20)} older messages) ▶",
+            width=300,
+            height=28,
+            font=("Segoe UI", 10),
+            fg_color="transparent",
+            hover_color="#3a3a3a",
+            text_color="#888888",
+            command=self._toggle_chat_history
+        )
+        self._history_toggle_btn.pack(side="left", padx=10, pady=5)
+        
+        # Collapsible history content (hidden by default)
+        self._history_content = ctk.CTkFrame(self._history_frame, fg_color="#1a1a1a")
+        # Will be packed/unpacked when toggled
+        
+        self._history_text = ctk.CTkTextbox(
+            self._history_content,
+            height=150,
+            font=("Segoe UI", 10),
+            fg_color="#1a1a1a",
+            text_color="#888888",
+            wrap="word"
+        )
+        self._history_text.pack(fill="x", padx=10, pady=5)
+        
+        # Main message display area (last 20 messages)
+        self._chat_display_frame = ctk.CTkScrollableFrame(
+            self._chat_window,
+            fg_color="#1a1a1a",
+            scrollbar_button_color="#3a3a3a",
+            scrollbar_button_hover_color="#4a4a4a"
+        )
+        self._chat_display_frame.pack(fill="both", expand=True, padx=10, pady=5)
+        
+        # Render existing messages
+        self._render_chat_messages()
+        
+        # Quick modifier buttons frame
+        modifier_frame = ctk.CTkFrame(self._chat_window, fg_color="#252525")
+        modifier_frame.pack(fill="x", padx=10, pady=(5, 0))
+        
+        modifier_label = ctk.CTkLabel(
+            modifier_frame,
+            text="Quick:",
+            font=("Segoe UI", 10),
+            text_color="#666666"
+        )
+        modifier_label.pack(side="left", padx=(10, 5), pady=8)
+        
+        # Quick modifier buttons
+        self._chat_mod_buttons = {}
+        
+        # Headings + bullet points
+        btn_bullets = ctk.CTkButton(
+            modifier_frame,
+            text="📋 Headings + Bullets",
+            width=140,
+            height=26,
+            font=("Segoe UI", 10),
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=lambda: self._toggle_chat_modifier("bullets")
+        )
+        btn_bullets.pack(side="left", padx=3, pady=8)
+        self._chat_mod_buttons["bullets"] = btn_bullets
+        
+        # Concise
+        btn_concise = ctk.CTkButton(
+            modifier_frame,
+            text="⚡ Concise",
+            width=80,
+            height=26,
+            font=("Segoe UI", 10),
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=lambda: self._toggle_chat_modifier("concise")
+        )
+        btn_concise.pack(side="left", padx=3, pady=8)
+        self._chat_mod_buttons["concise"] = btn_concise
+        
+        # Code focus
+        btn_code = ctk.CTkButton(
+            modifier_frame,
+            text="💻 Code",
+            width=70,
+            height=26,
+            font=("Segoe UI", 10),
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=lambda: self._toggle_chat_modifier("code")
+        )
+        btn_code.pack(side="left", padx=3, pady=8)
+        self._chat_mod_buttons["code"] = btn_code
+        
+        # Input area
+        input_frame = ctk.CTkFrame(self._chat_window, fg_color="#2a2a2a")
+        input_frame.pack(fill="x", padx=10, pady=10)
+        
+        self._chat_input = ctk.CTkTextbox(
+            input_frame,
+            height=80,
+            font=("Segoe UI", 11),
+            fg_color="#1a1a1a",
+            text_color="white",
+            wrap="word"
+        )
+        self._chat_input.pack(fill="x", padx=10, pady=(10, 5), side="top")
+        self._chat_input.focus()
+        
+        # Send button row
+        send_frame = ctk.CTkFrame(input_frame, fg_color="transparent")
+        send_frame.pack(fill="x", padx=10, pady=(0, 10))
+        
+        send_btn = ctk.CTkButton(
+            send_frame,
+            text="Send →",
+            width=100,
+            height=32,
+            font=("Segoe UI", 11, "bold"),
+            fg_color="#2a7d2e",
+            hover_color="#3a9d3e",
+            command=self._send_chat_message
+        )
+        send_btn.pack(side="right", padx=5)
+        
+        # Token counter
+        self._chat_token_label = ctk.CTkLabel(
+            send_frame,
+            text="",
+            font=("Segoe UI", 9),
+            text_color="#666666"
+        )
+        self._chat_token_label.pack(side="left", padx=10)
+        
+        # Bind Enter to send (Shift+Enter for newline)
+        def on_enter(e):
+            if not (e.state & 0x1):  # Not Shift
+                self._send_chat_message()
+                return "break"
+        self._chat_input.bind("<Return>", on_enter)
+        
+        # Bind Ctrl+Enter to send regardless
+        self._chat_input.bind("<Control-Return>", lambda e: (self._send_chat_message(), "break")[-1])
+        
+        debug_log("CHAT", "Chat window created")
+    
+    def _load_chat_history(self):
+        """Load chat history from file"""
+        try:
+            if os.path.exists(self._chat_history_file):
+                with open(self._chat_history_file, 'r', encoding='utf-8') as f:
+                    self._chat_messages = json.load(f)
+                debug_log("CHAT", f"Loaded {len(self._chat_messages)} messages from history")
+        except Exception as e:
+            debug_log("CHAT_ERROR", f"Failed to load chat history: {e}")
+            self._chat_messages = []
+    
+    def _save_chat_history(self):
+        """Save chat history to file"""
+        try:
+            with open(self._chat_history_file, 'w', encoding='utf-8') as f:
+                json.dump(self._chat_messages, f, indent=2, ensure_ascii=False)
+            debug_log("CHAT", f"Saved {len(self._chat_messages)} messages to history")
+        except Exception as e:
+            debug_log("CHAT_ERROR", f"Failed to save chat history: {e}")
+    
+    def _get_chat_context(self) -> str:
+        """Load the context file content"""
+        try:
+            if os.path.exists(self._chat_context_file):
+                with open(self._chat_context_file, 'r', encoding='utf-8') as f:
+                    return f.read().strip()
+        except Exception as e:
+            debug_log("CHAT_ERROR", f"Failed to load context: {e}")
+        return ""
+    
+    def _edit_chat_context(self):
+        """Open editor for chat context file"""
+        debug_log("CHAT", "Opening context editor")
+        
+        # Create context editor window
+        ctx_win = ctk.CTkToplevel(self._chat_window)
+        ctx_win.title("📋 Edit Chat Context")
+        ctx_win.geometry("600x500")
+        ctx_win.configure(fg_color="#1a1a1a")
+        ctx_win.transient(self._chat_window)
+        ctx_win.lift()
+        ctx_win.grab_set()
+        
+        # Center
+        x = (ctx_win.winfo_screenwidth() - 600) // 2
+        y = (ctx_win.winfo_screenheight() - 500) // 2
+        ctx_win.geometry(f"600x500+{x}+{y}")
+        
+        # Title
+        title = ctk.CTkLabel(
+            ctx_win,
+            text="📋 Chat Context",
+            font=("Segoe UI", 14, "bold"),
+            text_color="#FF6B00"
+        )
+        title.pack(pady=(15, 5))
+        
+        # Instructions
+        instructions = ctk.CTkLabel(
+            ctx_win,
+            text="This context is sent with EVERY message.\nUse it for rules, preferences, or persistent information.",
+            font=("Segoe UI", 10),
+            text_color="#888888"
+        )
+        instructions.pack(pady=(0, 10))
+        
+        # Text area
+        ctx_text = ctk.CTkTextbox(
+            ctx_win,
+            font=("Segoe UI", 11),
+            fg_color="#2a2a2a",
+            text_color="white",
+            wrap="word"
+        )
+        ctx_text.pack(fill="both", expand=True, padx=20, pady=10)
+        
+        # Load existing context
+        existing = self._get_chat_context()
+        if existing:
+            ctx_text.insert("1.0", existing)
+        else:
+            # Default template
+            ctx_text.insert("1.0", """# Chat Context
+# Everything here is sent with every message.
+
+## My Preferences
+- 
+
+## Rules
+- 
+
+## Important Info
+- 
+""")
+        
+        # Buttons
+        btn_frame = ctk.CTkFrame(ctx_win, fg_color="transparent")
+        btn_frame.pack(pady=15)
+        
+        def save_context():
+            content = ctx_text.get("1.0", "end-1c")
+            try:
+                with open(self._chat_context_file, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                # Update button color to indicate context exists
+                self._chat_context_btn.configure(fg_color="#3a5a3a")
+                ctx_win.destroy()
+                debug_log("CHAT", "Context saved")
+            except Exception as e:
+                debug_log("CHAT_ERROR", f"Failed to save context: {e}")
+        
+        save_btn = ctk.CTkButton(
+            btn_frame,
+            text="💾 Save",
+            width=100,
+            height=32,
+            fg_color="#2a7d2e",
+            hover_color="#3a9d3e",
+            command=save_context
+        )
+        save_btn.pack(side="left", padx=10)
+        
+        cancel_btn = ctk.CTkButton(
+            btn_frame,
+            text="Cancel",
+            width=100,
+            height=32,
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=ctx_win.destroy
+        )
+        cancel_btn.pack(side="left", padx=10)
+        
+        ctx_win.bind("<Escape>", lambda e: ctx_win.destroy())
+    
+    def _new_chat(self):
+        """Start a new chat (clear messages but keep context)"""
+        if self._chat_messages:
+            # Save current chat to archive
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            archive_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"chat_archive_{timestamp}.json")
+            try:
+                with open(archive_file, 'w', encoding='utf-8') as f:
+                    json.dump(self._chat_messages, f, indent=2, ensure_ascii=False)
+                debug_log("CHAT", f"Archived {len(self._chat_messages)} messages to {archive_file}")
+            except Exception as e:
+                debug_log("CHAT_ERROR", f"Failed to archive: {e}")
+        
+        self._chat_messages = []
+        self._save_chat_history()
+        self._render_chat_messages()
+        self._update_history_toggle()
+        debug_log("CHAT", "Started new chat")
+    
+    def _toggle_chat_history(self):
+        """Toggle the expanded history view"""
+        self._chat_history_expanded = not self._chat_history_expanded
+        
+        if self._chat_history_expanded:
+            # Show older messages
+            self._history_content.pack(fill="x", padx=5, pady=5)
+            self._history_toggle_btn.configure(text=f"📜 History ({max(0, len(self._chat_messages) - 20)} older messages) ▼")
+            self._render_history_messages()
+        else:
+            self._history_content.pack_forget()
+            self._history_toggle_btn.configure(text=f"📜 History ({max(0, len(self._chat_messages) - 20)} older messages) ▶")
+    
+    def _update_history_toggle(self):
+        """Update the history toggle button text"""
+        older_count = max(0, len(self._chat_messages) - 20)
+        arrow = "▼" if self._chat_history_expanded else "▶"
+        self._history_toggle_btn.configure(text=f"📜 History ({older_count} older messages) {arrow}")
+    
+    def _render_history_messages(self):
+        """Render older messages (before the last 20) in the history panel"""
+        self._history_text.configure(state="normal")
+        self._history_text.delete("1.0", "end")
+        
+        older_messages = self._chat_messages[:-20] if len(self._chat_messages) > 20 else []
+        
+        for msg in older_messages:
+            role = "You" if msg["role"] == "user" else "GPT"
+            timestamp = msg.get("timestamp", "")
+            content = msg["content"][:200] + "..." if len(msg["content"]) > 200 else msg["content"]
+            self._history_text.insert("end", f"[{timestamp}] {role}: {content}\n\n")
+        
+        if not older_messages:
+            self._history_text.insert("end", "(No older messages)")
+        
+        self._history_text.configure(state="disabled")
+    
+    def _render_chat_messages(self):
+        """Render the last 20 messages in the main display"""
+        # Clear existing message widgets
+        for widget in self._chat_display_frame.winfo_children():
+            widget.destroy()
+        
+        # Get last 20 messages
+        recent_messages = self._chat_messages[-20:] if len(self._chat_messages) > 20 else self._chat_messages
+        
+        if not recent_messages:
+            # Show placeholder
+            placeholder = ctk.CTkLabel(
+                self._chat_display_frame,
+                text="💬 Start a conversation!\n\nYour messages and GPT responses will appear here.\nUse the Context button to set persistent rules.",
+                font=("Segoe UI", 12),
+                text_color="#666666"
+            )
+            placeholder.pack(expand=True, pady=50)
+            return
+        
+        for msg in recent_messages:
+            self._add_message_bubble(msg)
+    
+    def _add_message_bubble(self, msg: dict):
+        """Add a message bubble to the display"""
+        is_user = msg["role"] == "user"
+        
+        # Message container
+        msg_frame = ctk.CTkFrame(
+            self._chat_display_frame,
+            fg_color="#2d5a27" if is_user else "#2a2a2a",
+            corner_radius=10
+        )
+        msg_frame.pack(
+            fill="x",
+            padx=(60 if is_user else 10, 10 if is_user else 60),
+            pady=5,
+            anchor="e" if is_user else "w"
+        )
+        
+        # Header with role and timestamp
+        header_frame = ctk.CTkFrame(msg_frame, fg_color="transparent")
+        header_frame.pack(fill="x", padx=10, pady=(8, 2))
+        
+        role_label = ctk.CTkLabel(
+            header_frame,
+            text="You" if is_user else "GPT",
+            font=("Segoe UI", 10, "bold"),
+            text_color="#90EE90" if is_user else "#FF6B00"
+        )
+        role_label.pack(side="left")
+        
+        timestamp = msg.get("timestamp", "")
+        if timestamp:
+            time_label = ctk.CTkLabel(
+                header_frame,
+                text=timestamp,
+                font=("Segoe UI", 9),
+                text_color="#666666"
+            )
+            time_label.pack(side="right")
+        
+        # Message content
+        content_label = ctk.CTkLabel(
+            msg_frame,
+            text=msg["content"],
+            font=("Segoe UI", 11),
+            text_color="white",
+            wraplength=650,
+            justify="left",
+            anchor="w"
+        )
+        content_label.pack(fill="x", padx=10, pady=(2, 10))
+        
+        # Copy button for assistant messages
+        if not is_user:
+            copy_btn = ctk.CTkButton(
+                msg_frame,
+                text="📋",
+                width=30,
+                height=20,
+                font=("Segoe UI", 9),
+                fg_color="transparent",
+                hover_color="#3a3a3a",
+                command=lambda c=msg["content"]: pyperclip.copy(c)
+            )
+            copy_btn.pack(anchor="e", padx=10, pady=(0, 5))
+    
+    def _toggle_chat_modifier(self, modifier: str):
+        """Toggle a quick modifier on/off"""
+        if modifier in self._chat_quick_modifiers and self._chat_quick_modifiers[modifier]:
+            # Turn off
+            self._chat_quick_modifiers[modifier] = False
+            self._chat_mod_buttons[modifier].configure(fg_color="#4a4a4a")
+        else:
+            # Turn on
+            self._chat_quick_modifiers[modifier] = True
+            self._chat_mod_buttons[modifier].configure(fg_color="#FF6B00")
+    
+    def _get_modifier_instructions(self) -> str:
+        """Get instructions based on active modifiers"""
+        instructions = []
+        
+        if self._chat_quick_modifiers.get("bullets"):
+            instructions.append("FORMAT YOUR RESPONSE WITH: Headings and bullet points. Each bullet point should be <10 words. Use clear section headers.")
+        
+        if self._chat_quick_modifiers.get("concise"):
+            instructions.append("BE CONCISE: Keep your response brief and to the point. No unnecessary elaboration.")
+        
+        if self._chat_quick_modifiers.get("code"):
+            instructions.append("FOCUS ON CODE: Prioritize code examples and technical implementation details.")
+        
+        return "\n".join(instructions)
+    
+    def _send_chat_message(self):
+        """Send the current message to GPT"""
+        message = self._chat_input.get("1.0", "end-1c").strip()
+        if not message:
+            return
+        
+        debug_log("CHAT", f"Sending message", {"length": len(message)})
+        
+        # Clear input
+        self._chat_input.delete("1.0", "end")
+        
+        # Add user message to history
+        timestamp = datetime.now().strftime("%H:%M")
+        user_msg = {
+            "role": "user",
+            "content": message,
+            "timestamp": timestamp
+        }
+        self._chat_messages.append(user_msg)
+        
+        # Update display
+        self._render_chat_messages()
+        self._update_history_toggle()
+        
+        # Scroll to bottom
+        self._chat_display_frame._parent_canvas.yview_moveto(1.0)
+        
+        # Show thinking indicator
+        thinking_frame = ctk.CTkFrame(
+            self._chat_display_frame,
+            fg_color="#2a2a2a",
+            corner_radius=10
+        )
+        thinking_frame.pack(fill="x", padx=(10, 60), pady=5, anchor="w")
+        thinking_label = ctk.CTkLabel(
+            thinking_frame,
+            text="⏳ Thinking...",
+            font=("Segoe UI", 11),
+            text_color="#888888"
+        )
+        thinking_label.pack(padx=15, pady=10)
+        
+        # Call API in background
+        def call_api():
+            try:
+                response = self._call_chat_api(message)
+                self._chat_window.after(0, lambda: self._handle_chat_response(response, thinking_frame))
+            except Exception as e:
+                self._chat_window.after(0, lambda: self._handle_chat_error(str(e), thinking_frame))
+        
+        thread = threading.Thread(target=call_api, daemon=True)
+        thread.start()
+    
+    def _call_chat_api(self, user_message: str) -> dict:
+        """Call the OpenAI API with chat history and context"""
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key or api_key == "your_openai_api_key_here":
+            return {"error": "API key not configured"}
+        
+        # Build messages array
+        messages = []
+        
+        # System message with context
+        context = self._get_chat_context()
+        modifier_instructions = self._get_modifier_instructions()
+        
+        system_content = "You are a helpful assistant."
+        if context:
+            system_content += f"\n\n## USER'S PERSISTENT CONTEXT:\n{context}"
+        if modifier_instructions:
+            system_content += f"\n\n## RESPONSE FORMAT INSTRUCTIONS:\n{modifier_instructions}"
+        
+        messages.append({"role": "system", "content": system_content})
+        
+        # Add conversation history (for API context, not just display)
+        for msg in self._chat_messages[:-1]:  # Exclude the just-added user message
+            messages.append({"role": msg["role"], "content": msg["content"]})
+        
+        # Add current message
+        messages.append({"role": "user", "content": user_message})
+        
+        debug_log("CHAT_API", f"Calling API with {len(messages)} messages")
+        
+        try:
+            client = OpenAI(api_key=api_key)
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages,
+                max_tokens=2000,
+                temperature=0.7
+            )
+            
+            answer = response.choices[0].message.content
+            token_info = {
+                "input_tokens": response.usage.prompt_tokens,
+                "output_tokens": response.usage.completion_tokens,
+                "total_tokens": response.usage.total_tokens
+            }
+            
+            debug_log("CHAT_API", "Response received", token_info)
+            
+            return {"answer": answer, "tokens": token_info}
+            
+        except Exception as e:
+            debug_log("CHAT_API_ERROR", f"API call failed: {e}")
+            return {"error": str(e)}
+    
+    def _handle_chat_response(self, response: dict, thinking_frame):
+        """Handle successful API response"""
+        # Remove thinking indicator
+        thinking_frame.destroy()
+        
+        if "error" in response:
+            self._handle_chat_error(response["error"], None)
+            return
+        
+        # Add assistant message to history
+        timestamp = datetime.now().strftime("%H:%M")
+        assistant_msg = {
+            "role": "assistant",
+            "content": response["answer"],
+            "timestamp": timestamp
+        }
+        self._chat_messages.append(assistant_msg)
+        
+        # Save history
+        self._save_chat_history()
+        
+        # Update display
+        self._render_chat_messages()
+        self._update_history_toggle()
+        
+        # Scroll to bottom
+        self._chat_display_frame._parent_canvas.yview_moveto(1.0)
+        
+        # Update token counter
+        if "tokens" in response:
+            cost = estimate_cost(response["tokens"]["input_tokens"], response["tokens"]["output_tokens"], "gpt-4o-mini")
+            self._chat_token_label.configure(
+                text=f"Last: {response['tokens']['total_tokens']} tokens ~{format_cost(cost)}"
+            )
+    
+    def _handle_chat_error(self, error: str, thinking_frame):
+        """Handle API error"""
+        if thinking_frame:
+            thinking_frame.destroy()
+        
+        # Show error in chat
+        error_frame = ctk.CTkFrame(
+            self._chat_display_frame,
+            fg_color="#5a2a2a",
+            corner_radius=10
+        )
+        error_frame.pack(fill="x", padx=(10, 60), pady=5, anchor="w")
+        error_label = ctk.CTkLabel(
+            error_frame,
+            text=f"❌ Error: {error}",
+            font=("Segoe UI", 11),
+            text_color="#ff6666"
+        )
+        error_label.pack(padx=15, pady=10)
+        
+        debug_log("CHAT_ERROR", f"Displayed error: {error}")
+    
+    # ==================== END CHAT WINDOW ====================
+    
     def _process_quick_question(self, question: str, format_type: str):
         """Process quick question with selected format"""
         debug_log("QUICK_QUESTION", f"Processing question with format: {format_type}")
@@ -6770,11 +8786,633 @@ Generate questions that test understanding, not just recall. Make them challengi
             "fixation_index": fixation_index
         })
     
+    # ==================== AI STRATEGY ANALYSIS METHODS ====================
+    
+    def open_strategy_analysis_window(self):
+        """Open the AI Strategy Analysis window - triggered by Ctrl+Shift+A"""
+        debug_log("STRATEGY_UI", "Opening Strategy Analysis window")
+        
+        # Check if window already exists
+        if hasattr(self, '_strategy_window') and self._strategy_window:
+            try:
+                if self._strategy_window.winfo_exists():
+                    self._strategy_window.lift()
+                    self._strategy_window.focus_force()
+                    return
+            except:
+                pass
+        
+        # Create main analysis window
+        self._strategy_window = ctk.CTkToplevel(self.window)
+        self._strategy_window.title("AI Strategy Analysis")
+        self._strategy_window.geometry("900x750")
+        self._strategy_window.configure(fg_color="#1a1a1a")
+        self._strategy_window.transient(self.window)
+        
+        # Center the window
+        screen_width = self._strategy_window.winfo_screenwidth()
+        screen_height = self._strategy_window.winfo_screenheight()
+        x = (screen_width - 900) // 2
+        y = (screen_height - 750) // 2
+        self._strategy_window.geometry(f"900x750+{x}+{y}")
+        
+        # Bind Escape to close
+        self._strategy_window.bind("<Escape>", lambda e: self._close_strategy_window())
+        self._strategy_window.protocol("WM_DELETE_WINDOW", self._close_strategy_window)
+        
+        # Setup event logging
+        setup_global_event_logging(self._strategy_window, "Strategy Analysis")
+        
+        # Title header
+        title_frame = ctk.CTkFrame(self._strategy_window, fg_color="#2a2a2a", corner_radius=10)
+        title_frame.pack(fill="x", padx=20, pady=(20, 10))
+        
+        title_label = ctk.CTkLabel(
+            title_frame,
+            text="📊 AI Strategy Optimization",
+            font=("Segoe UI", 20, "bold"),
+            text_color="#FF6B00"
+        )
+        title_label.pack(pady=15)
+        
+        subtitle_label = ctk.CTkLabel(
+            title_frame,
+            text="Press 'Analyze Strategy' to generate a comprehensive AI-powered optimization report",
+            font=("Segoe UI", 11),
+            text_color="#888888"
+        )
+        subtitle_label.pack(pady=(0, 15))
+        
+        # Parameters preview frame
+        params_frame = ctk.CTkFrame(self._strategy_window, fg_color="#2a2a2a", corner_radius=10)
+        params_frame.pack(fill="x", padx=20, pady=10)
+        
+        params_header = ctk.CTkLabel(
+            params_frame,
+            text="Current Strategy Parameters",
+            font=("Segoe UI", 14, "bold"),
+            text_color="white"
+        )
+        params_header.pack(pady=(10, 5), anchor="w", padx=15)
+        
+        # Load current parameters
+        self._strategy_params = load_strategy_config()
+        
+        # Create a scrollable text box for parameters
+        self._params_text = ctk.CTkTextbox(
+            params_frame,
+            height=120,
+            font=("Consolas", 10),
+            fg_color="#1a1a1a",
+            text_color="#00ff00",
+            wrap="none"
+        )
+        self._params_text.pack(fill="x", padx=15, pady=(0, 10))
+        self._update_params_display()
+        
+        # Edit parameters button
+        edit_params_btn = ctk.CTkButton(
+            params_frame,
+            text="⚙️ Edit Parameters",
+            width=150,
+            font=("Segoe UI", 11),
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=self._open_params_editor
+        )
+        edit_params_btn.pack(pady=(0, 10))
+        
+        # Auto-test toggle frame
+        toggle_frame = ctk.CTkFrame(self._strategy_window, fg_color="transparent")
+        toggle_frame.pack(fill="x", padx=20, pady=5)
+        
+        self._auto_test_var = ctk.BooleanVar(value=False)
+        auto_test_check = ctk.CTkCheckBox(
+            toggle_frame,
+            text="Auto-Test Suggested Changes (apply incrementally and re-run backtest)",
+            variable=self._auto_test_var,
+            font=("Segoe UI", 11),
+            text_color="#888888",
+            fg_color="#FF6B00",
+            hover_color="#ff8533"
+        )
+        auto_test_check.pack(side="left")
+        
+        # Results area
+        results_frame = ctk.CTkFrame(self._strategy_window, fg_color="#2a2a2a", corner_radius=10)
+        results_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        
+        results_header = ctk.CTkLabel(
+            results_frame,
+            text="Analysis Results",
+            font=("Segoe UI", 14, "bold"),
+            text_color="white"
+        )
+        results_header.pack(pady=(10, 5), anchor="w", padx=15)
+        
+        self._results_text = ctk.CTkTextbox(
+            results_frame,
+            font=("Segoe UI", 11),
+            fg_color="#1a1a1a",
+            text_color="white",
+            wrap="word"
+        )
+        self._results_text.pack(fill="both", expand=True, padx=15, pady=(0, 10))
+        self._results_text.insert("1.0", "Click 'Analyze Strategy' to generate an AI-powered optimization report.\n\nThe analysis will evaluate:\n• Expectancy decomposition\n• Structural bottlenecks\n• MFE/MAE analysis\n• Capital efficiency\n• Volatility regime segmentation\n• Quantified parameter adjustments")
+        self._results_text.configure(state="disabled")
+        
+        # Status/cost info
+        self._status_label = ctk.CTkLabel(
+            results_frame,
+            text="Ready | Estimated cost: ~$0.05-0.15",
+            font=("Segoe UI", 10),
+            text_color="#666666"
+        )
+        self._status_label.pack(pady=(0, 10))
+        
+        # Action buttons frame
+        buttons_frame = ctk.CTkFrame(self._strategy_window, fg_color="transparent")
+        buttons_frame.pack(fill="x", padx=20, pady=(10, 20))
+        
+        # Analyze button (main action)
+        self._analyze_btn = ctk.CTkButton(
+            buttons_frame,
+            text="🔍 Analyze Strategy (AI)",
+            width=200,
+            height=40,
+            font=("Segoe UI", 13, "bold"),
+            fg_color="#FF6B00",
+            hover_color="#ff8533",
+            command=self._run_strategy_analysis
+        )
+        self._analyze_btn.pack(side="left", padx=5)
+        
+        # Apply changes button
+        self._apply_btn = ctk.CTkButton(
+            buttons_frame,
+            text="✅ Apply Suggested Changes",
+            width=180,
+            height=40,
+            font=("Segoe UI", 11),
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            state="disabled",
+            command=self._apply_suggested_changes
+        )
+        self._apply_btn.pack(side="left", padx=5)
+        
+        # Export button
+        self._export_btn = ctk.CTkButton(
+            buttons_frame,
+            text="📄 Export to .md",
+            width=130,
+            height=40,
+            font=("Segoe UI", 11),
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            state="disabled",
+            command=self._export_analysis
+        )
+        self._export_btn.pack(side="left", padx=5)
+        
+        # Run backtest button
+        self._backtest_btn = ctk.CTkButton(
+            buttons_frame,
+            text="🔄 Run Backtest",
+            width=130,
+            height=40,
+            font=("Segoe UI", 11),
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=self._run_backtest_with_adjustments
+        )
+        self._backtest_btn.pack(side="left", padx=5)
+        
+        # Store analysis results
+        self._last_analysis = None
+        self._suggested_changes = {}
+        
+        debug_log("STRATEGY_UI", "Strategy Analysis window created")
+    
+    def _close_strategy_window(self):
+        """Close the strategy analysis window"""
+        if hasattr(self, '_strategy_window') and self._strategy_window:
+            self._strategy_window.destroy()
+            self._strategy_window = None
+        debug_log("STRATEGY_UI", "Strategy Analysis window closed")
+    
+    def _update_params_display(self):
+        """Update the parameters display text"""
+        self._params_text.configure(state="normal")
+        self._params_text.delete("1.0", "end")
+        
+        params_lines = []
+        for key, value in sorted(self._strategy_params.items()):
+            if isinstance(value, float):
+                params_lines.append(f"{key}: {value:.2f}")
+            else:
+                params_lines.append(f"{key}: {value}")
+        
+        self._params_text.insert("1.0", "\n".join(params_lines))
+        self._params_text.configure(state="disabled")
+    
+    def _open_params_editor(self):
+        """Open a dialog to edit strategy parameters"""
+        debug_log("STRATEGY_UI", "Opening parameters editor")
+        
+        editor_win = ctk.CTkToplevel(self._strategy_window)
+        editor_win.title("Edit Strategy Parameters")
+        editor_win.geometry("500x600")
+        editor_win.configure(fg_color="#1a1a1a")
+        editor_win.transient(self._strategy_window)
+        
+        # Center
+        screen_width = editor_win.winfo_screenwidth()
+        screen_height = editor_win.winfo_screenheight()
+        x = (screen_width - 500) // 2
+        y = (screen_height - 600) // 2
+        editor_win.geometry(f"500x600+{x}+{y}")
+        
+        editor_win.bind("<Escape>", lambda e: editor_win.destroy())
+        
+        # Title
+        title = ctk.CTkLabel(
+            editor_win,
+            text="⚙️ Strategy Parameters",
+            font=("Segoe UI", 16, "bold"),
+            text_color="#FF6B00"
+        )
+        title.pack(pady=15)
+        
+        # Scrollable frame for parameters
+        scroll_frame = ctk.CTkScrollableFrame(
+            editor_win,
+            fg_color="#2a2a2a",
+            width=460,
+            height=450
+        )
+        scroll_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        
+        # Create entry fields for each parameter
+        entries = {}
+        for key, value in sorted(self._strategy_params.items()):
+            row = ctk.CTkFrame(scroll_frame, fg_color="transparent")
+            row.pack(fill="x", pady=3)
+            
+            label = ctk.CTkLabel(
+                row,
+                text=key.replace("_", " ").title() + ":",
+                font=("Segoe UI", 10),
+                text_color="#aaaaaa",
+                width=200,
+                anchor="e"
+            )
+            label.pack(side="left", padx=(0, 10))
+            
+            entry = ctk.CTkEntry(
+                row,
+                width=150,
+                font=("Consolas", 11),
+                fg_color="#1a1a1a",
+                text_color="white"
+            )
+            entry.insert(0, str(value))
+            entry.pack(side="left")
+            entries[key] = entry
+        
+        # Buttons
+        btn_frame = ctk.CTkFrame(editor_win, fg_color="transparent")
+        btn_frame.pack(fill="x", padx=20, pady=15)
+        
+        def save_params():
+            for key, entry in entries.items():
+                try:
+                    val = entry.get()
+                    if '.' in val:
+                        self._strategy_params[key] = float(val)
+                    else:
+                        self._strategy_params[key] = int(val) if val.isdigit() else float(val)
+                except ValueError:
+                    pass
+            save_strategy_config(self._strategy_params)
+            self._update_params_display()
+            editor_win.destroy()
+            debug_log("STRATEGY_UI", "Parameters saved")
+        
+        def reset_defaults():
+            for key, entry in entries.items():
+                entry.delete(0, "end")
+                entry.insert(0, str(DEFAULT_STRATEGY_PARAMS.get(key, "")))
+        
+        save_btn = ctk.CTkButton(
+            btn_frame,
+            text="💾 Save",
+            width=100,
+            fg_color="#FF6B00",
+            hover_color="#ff8533",
+            command=save_params
+        )
+        save_btn.pack(side="left", padx=5)
+        
+        reset_btn = ctk.CTkButton(
+            btn_frame,
+            text="🔄 Reset Defaults",
+            width=120,
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=reset_defaults
+        )
+        reset_btn.pack(side="left", padx=5)
+        
+        cancel_btn = ctk.CTkButton(
+            btn_frame,
+            text="Cancel",
+            width=80,
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=editor_win.destroy
+        )
+        cancel_btn.pack(side="left", padx=5)
+    
+    def _run_strategy_analysis(self):
+        """Run the AI strategy analysis"""
+        debug_log("STRATEGY_ANALYSIS", "Starting AI strategy analysis")
+        
+        # Update UI
+        self._analyze_btn.configure(state="disabled", text="🔄 Analyzing...")
+        self._status_label.configure(text="Collecting strategy data...")
+        self._results_text.configure(state="normal")
+        self._results_text.delete("1.0", "end")
+        self._results_text.insert("1.0", "Collecting strategy data and sending to AI for analysis...\nThis may take 15-30 seconds.")
+        self._results_text.configure(state="disabled")
+        
+        # Run analysis in background thread
+        def run_analysis():
+            try:
+                # Collect all data
+                params = self._strategy_params
+                backtest = load_backtest_results()
+                trades = load_trade_ledger_metrics()
+                regime = load_regime_metrics()
+                capital = calculate_capital_efficiency()
+                
+                debug_log("STRATEGY_ANALYSIS", "Data collected", {
+                    "params_count": len(params),
+                    "backtest_pnl": backtest.get("total_pnl", 0),
+                    "total_trades": trades.get("total_trades", 0)
+                })
+                
+                # Build prompt
+                prompt = build_strategy_analysis_prompt(params, backtest, trades, regime, capital)
+                
+                # Call OpenAI
+                self._strategy_window.after(0, lambda: self._status_label.configure(
+                    text="Sending to OpenAI for analysis..."
+                ))
+                
+                start_time = time.time()
+                
+                from openai import OpenAI
+                client = OpenAI()
+                
+                response = client.chat.completions.create(
+                    model="gpt-4o",  # Use gpt-4o for comprehensive analysis
+                    messages=[
+                        {"role": "system", "content": STRATEGY_ANALYSIS_SYSTEM_PROMPT},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.3,  # Lower temp for consistent analysis
+                    max_tokens=4000
+                )
+                
+                latency = int((time.time() - start_time) * 1000)
+                
+                analysis = response.choices[0].message.content
+                token_info = {
+                    "input_tokens": response.usage.prompt_tokens,
+                    "output_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens
+                }
+                
+                cost = estimate_cost(token_info["input_tokens"], token_info["output_tokens"], "gpt-4o")
+                
+                debug_log("STRATEGY_ANALYSIS", "Analysis complete", {
+                    "latency_ms": latency,
+                    "tokens": token_info,
+                    "cost": cost
+                })
+                
+                # Save to backup
+                save_api_response_backup(
+                    "STRATEGY_ANALYSIS",
+                    f"Strategy Analysis Request ({len(prompt)} chars)",
+                    analysis,
+                    token_info["input_tokens"],
+                    token_info["output_tokens"],
+                    token_info["total_tokens"],
+                    "gpt-4o"
+                )
+                
+                # Store results
+                self._last_analysis = analysis
+                self._analysis_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._analysis_params = params.copy()
+                
+                # Parse suggested changes
+                self._suggested_changes = parse_suggested_changes(analysis)
+                
+                # Update UI on main thread
+                self._strategy_window.after(0, lambda: self._show_analysis_results(
+                    analysis, token_info, cost, latency
+                ))
+                
+            except Exception as e:
+                debug_log("STRATEGY_ANALYSIS_ERROR", f"Analysis failed: {str(e)}")
+                self._strategy_window.after(0, lambda: self._show_analysis_error(str(e)))
+        
+        threading.Thread(target=run_analysis, daemon=True).start()
+    
+    def _show_analysis_results(self, analysis: str, token_info: dict, cost: float, latency: int):
+        """Display the analysis results"""
+        self._results_text.configure(state="normal")
+        self._results_text.delete("1.0", "end")
+        self._results_text.insert("1.0", analysis)
+        self._apply_markdown_formatting(self._results_text)
+        self._results_text.configure(state="disabled")
+        
+        # Update status
+        self._status_label.configure(
+            text=f"✅ Analysis complete | {token_info['total_tokens']} tokens | {format_cost(cost)} | {latency}ms"
+        )
+        
+        # Enable buttons
+        self._analyze_btn.configure(state="normal", text="🔍 Analyze Strategy (AI)")
+        self._export_btn.configure(state="normal")
+        
+        if self._suggested_changes:
+            self._apply_btn.configure(state="normal")
+        
+        debug_log("STRATEGY_UI", "Analysis results displayed")
+        
+        # If auto-test is enabled, run the test loop
+        if self._auto_test_var.get() and self._suggested_changes:
+            self._run_auto_test_loop()
+    
+    def _show_analysis_error(self, error: str):
+        """Display an error message"""
+        self._results_text.configure(state="normal")
+        self._results_text.delete("1.0", "end")
+        self._results_text.insert("1.0", f"❌ Analysis Failed\n\nError: {error}\n\nPlease check:\n• Your OpenAI API key is configured in .env\n• You have sufficient API credits\n• Your internet connection is working")
+        self._results_text.configure(state="disabled")
+        
+        self._status_label.configure(text="❌ Analysis failed - see error above")
+        self._analyze_btn.configure(state="normal", text="🔍 Analyze Strategy (AI)")
+    
+    def _apply_suggested_changes(self):
+        """Apply the AI-suggested parameter changes"""
+        if not self._suggested_changes:
+            return
+        
+        debug_log("STRATEGY_UI", f"Applying suggested changes: {self._suggested_changes}")
+        
+        # Create confirmation dialog
+        confirm_win = ctk.CTkToplevel(self._strategy_window)
+        confirm_win.title("Apply Changes")
+        confirm_win.geometry("450x350")
+        confirm_win.configure(fg_color="#1a1a1a")
+        confirm_win.transient(self._strategy_window)
+        
+        screen_width = confirm_win.winfo_screenwidth()
+        screen_height = confirm_win.winfo_screenheight()
+        x = (screen_width - 450) // 2
+        y = (screen_height - 350) // 2
+        confirm_win.geometry(f"450x350+{x}+{y}")
+        
+        title = ctk.CTkLabel(
+            confirm_win,
+            text="⚠️ Apply Suggested Changes",
+            font=("Segoe UI", 16, "bold"),
+            text_color="#FF6B00"
+        )
+        title.pack(pady=15)
+        
+        info = ctk.CTkLabel(
+            confirm_win,
+            text="The following parameter changes will be applied:",
+            font=("Segoe UI", 11),
+            text_color="#888888"
+        )
+        info.pack(pady=5)
+        
+        # Show changes
+        changes_text = ctk.CTkTextbox(
+            confirm_win,
+            height=150,
+            font=("Consolas", 11),
+            fg_color="#2a2a2a",
+            text_color="#00ff00"
+        )
+        changes_text.pack(fill="x", padx=20, pady=10)
+        
+        for param, new_value in self._suggested_changes.items():
+            old_value = self._strategy_params.get(param, "N/A")
+            changes_text.insert("end", f"{param}:\n  Old: {old_value}\n  New: {new_value}\n\n")
+        
+        changes_text.configure(state="disabled")
+        
+        btn_frame = ctk.CTkFrame(confirm_win, fg_color="transparent")
+        btn_frame.pack(fill="x", padx=20, pady=15)
+        
+        def apply():
+            for param, value in self._suggested_changes.items():
+                self._strategy_params[param] = value
+            save_strategy_config(self._strategy_params)
+            self._update_params_display()
+            confirm_win.destroy()
+            debug_log("STRATEGY_UI", "Changes applied successfully")
+        
+        apply_btn = ctk.CTkButton(
+            btn_frame,
+            text="✅ Apply Changes",
+            width=130,
+            fg_color="#FF6B00",
+            hover_color="#ff8533",
+            command=apply
+        )
+        apply_btn.pack(side="left", padx=5)
+        
+        cancel_btn = ctk.CTkButton(
+            btn_frame,
+            text="Cancel",
+            width=80,
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=confirm_win.destroy
+        )
+        cancel_btn.pack(side="left", padx=5)
+    
+    def _export_analysis(self):
+        """Export the analysis to a markdown file"""
+        if not self._last_analysis:
+            return
+        
+        timestamp = getattr(self, '_analysis_timestamp', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        params = getattr(self, '_analysis_params', self._strategy_params)
+        
+        filepath = save_analysis_report(self._last_analysis, params, timestamp)
+        
+        if filepath:
+            self._status_label.configure(text=f"✅ Exported to: {os.path.basename(filepath)}")
+            debug_log("STRATEGY_UI", f"Analysis exported to {filepath}")
+        else:
+            self._status_label.configure(text="❌ Export failed")
+    
+    def _run_backtest_with_adjustments(self):
+        """Run a backtest with the current/adjusted parameters"""
+        debug_log("STRATEGY_UI", "Backtest requested")
+        
+        # This would integrate with an actual backtesting system
+        # For now, show a placeholder message
+        self._results_text.configure(state="normal")
+        self._results_text.insert("end", "\n\n" + "="*60 + "\n")
+        self._results_text.insert("end", "📊 BACKTEST REQUESTED\n")
+        self._results_text.insert("end", "="*60 + "\n\n")
+        self._results_text.insert("end", "To run a backtest:\n")
+        self._results_text.insert("end", "1. Ensure backtest_results.json is populated by your backtesting system\n")
+        self._results_text.insert("end", "2. Run your backtest with the current parameters\n")
+        self._results_text.insert("end", "3. Re-run this analysis to see updated metrics\n")
+        self._results_text.insert("end", "\nCurrent parameters have been saved to strategy_config.json\n")
+        self._results_text.configure(state="disabled")
+        
+        # Save current params
+        save_strategy_config(self._strategy_params)
+    
+    def _run_auto_test_loop(self):
+        """Run automatic testing of suggested changes"""
+        debug_log("STRATEGY_UI", "Starting auto-test loop")
+        
+        self._results_text.configure(state="normal")
+        self._results_text.insert("end", "\n\n" + "="*60 + "\n")
+        self._results_text.insert("end", "🔄 AUTO-TEST MODE ENABLED\n")
+        self._results_text.insert("end", "="*60 + "\n\n")
+        self._results_text.insert("end", "Suggested changes will be applied incrementally.\n")
+        self._results_text.insert("end", "After applying each change, re-run your backtest and\n")
+        self._results_text.insert("end", "then run analysis again to compare results.\n\n")
+        
+        for param, value in self._suggested_changes.items():
+            old = self._strategy_params.get(param, "N/A")
+            self._results_text.insert("end", f"• {param}: {old} → {value}\n")
+        
+        self._results_text.insert("end", "\nApply changes individually using 'Apply Suggested Changes'\n")
+        self._results_text.insert("end", "and monitor the impact on your backtest results.\n")
+        self._results_text.configure(state="disabled")
+
     def run(self):
         """Run the application main loop"""
         debug_log("APP_RUN", "Starting application main loop")
         
         print("Spreeder is running. Press F3 to open the window.")
+        print("Press Ctrl+Shift+A for AI Strategy Analysis.")
         print("Press Ctrl+C to exit.")
         
         debug_log("APP_RUN", "Application ready, starting tkinter mainloop")
@@ -7461,13 +10099,142 @@ class EnhancedSpreederApp(SpreederApp):
         self.display_summary()
 
 
-# ==================== ENTRY POINT ====================
+# ==================== SYSTEM TRAY SUPPORT ====================
 
-if __name__ == "__main__":
+def create_tray_icon_image(size=64):
+    """Create a simple tray icon image programmatically"""
+    # Create an orange "K" icon
+    image = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    
+    # Draw orange circle background
+    margin = 2
+    draw.ellipse([margin, margin, size-margin, size-margin], fill='#FF6B00')
+    
+    # Draw "K" letter in white (simple approximation)
+    # Since we may not have fonts, draw a simple K shape
+    cx, cy = size // 2, size // 2
+    r = size // 3
+    # Vertical line of K
+    draw.line([(cx - r//2, cy - r), (cx - r//2, cy + r)], fill='white', width=3)
+    # Diagonal lines of K
+    draw.line([(cx - r//2, cy), (cx + r//2, cy - r)], fill='white', width=3)
+    draw.line([(cx - r//2, cy), (cx + r//2, cy + r)], fill='white', width=3)
+    
+    return image
+
+
+class TrayManager:
+    """Manages the system tray icon and menu"""
+    
+    def __init__(self, app):
+        self.app = app
+        self.icon = None
+        self._running = True
+        
+    def create_menu(self):
+        """Create the tray icon menu"""
+        return pystray.Menu(
+            pystray.MenuItem("Show Window (F3)", self.on_show_window, default=True),
+            pystray.MenuItem("Strategy Analysis (Ctrl+Shift+A)", self.on_strategy_analysis),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem("Exit", self.on_exit)
+        )
+    
+    def on_show_window(self, icon, item):
+        """Show the main Spreeder window"""
+        if self.app and self.app.window:
+            self.app.window.after(0, lambda: self._show_window())
+    
+    def _show_window(self):
+        """Show window on main thread"""
+        try:
+            if hasattr(self.app, '_toggle_window'):
+                self.app._toggle_window(shift_held=False)
+            else:
+                self.app.window.deiconify()
+                self.app.window.focus_force()
+        except Exception as e:
+            debug_log("TRAY_ERROR", f"Failed to show window: {e}")
+    
+    def on_strategy_analysis(self, icon, item):
+        """Open the Strategy Analysis window"""
+        if self.app and self.app.window:
+            self.app.window.after(0, self.app.open_strategy_analysis_window)
+    
+    def on_exit(self, icon, item):
+        """Exit the application completely"""
+        debug_log("TRAY", "Exit requested from tray menu")
+        self._running = False
+        if self.icon:
+            self.icon.stop()
+        if self.app and self.app.window:
+            self.app.window.after(0, self._quit_app)
+    
+    def _quit_app(self):
+        """Quit on main thread"""
+        try:
+            keyboard.unhook_all()
+        except:
+            pass
+        if self.app and self.app.window:
+            self.app.window.quit()
+            self.app.window.destroy()
+        os._exit(0)
+    
+    def run(self):
+        """Run the tray icon (call from separate thread)"""
+        try:
+            image = create_tray_icon_image()
+            menu = self.create_menu()
+            
+            self.icon = pystray.Icon(
+                "KISS",
+                image,
+                "KISS - Press F3 to activate\nCtrl+Shift+A for Strategy Analysis",
+                menu
+            )
+            
+            debug_log("TRAY", "System tray icon started")
+            self.icon.run()
+        except Exception as e:
+            debug_log("TRAY_ERROR", f"Failed to run tray icon: {e}")
+
+
+def run_with_tray():
+    """Run the application with system tray support"""
     log_startup()
     
     debug_log("MAIN", "Creating EnhancedSpreederApp instance")
     app = EnhancedSpreederApp()
     
-    debug_log("MAIN", "Starting application")
+    if TRAY_AVAILABLE:
+        debug_log("MAIN", "Setting up system tray icon")
+        tray = TrayManager(app)
+        
+        # Run tray icon in background thread
+        tray_thread = threading.Thread(target=tray.run, daemon=True)
+        tray_thread.start()
+        
+        print("KISS is running in the background.")
+        print("  - Press F3 to open the speed reader")
+        print("  - Press Ctrl+Shift+A for AI Strategy Analysis")
+        print("  - Right-click the tray icon (orange K) to access menu")
+        print("  - Or click Exit in tray menu to quit")
+    else:
+        print("Running without system tray (install pystray for tray icon)")
+    
+    debug_log("MAIN", "Starting application main loop")
     app.run()
+
+
+# ==================== ENTRY POINT ====================
+
+if __name__ == "__main__":
+    # Handle PyInstaller frozen executable
+    if getattr(sys, 'frozen', False):
+        # Running as compiled executable
+        application_path = os.path.dirname(sys.executable)
+        os.chdir(application_path)  # Set working directory to exe location
+    
+    run_with_tray()
