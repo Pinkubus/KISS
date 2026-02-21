@@ -12,9 +12,11 @@ import time
 import os
 import sys
 import json
+import base64
 from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI
+from tkinter import filedialog
 
 # System tray support
 try:
@@ -5973,6 +5975,7 @@ Please clarify this for me in a way that helps me truly understand."""
         self._chat_history_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_history.json")
         self._chat_history_expanded = False
         self._chat_quick_modifiers = {}  # Track which modifiers are active
+        self._chat_attached_images = []  # List of {"path": str, "base64": str, "thumbnail": PhotoImage}
         
         # Load existing history if any
         self._load_chat_history()
@@ -6153,9 +6156,26 @@ Please clarify this for me in a way that helps me truly understand."""
         self._chat_input.pack(fill="x", padx=10, pady=(10, 5), side="top")
         self._chat_input.focus()
         
+        # Image preview frame (hidden when empty)
+        self._chat_image_preview_frame = ctk.CTkFrame(input_frame, fg_color="#1a1a1a", height=70)
+        # Will be packed/unpacked dynamically based on whether images are attached
+        
         # Send button row
         send_frame = ctk.CTkFrame(input_frame, fg_color="transparent")
         send_frame.pack(fill="x", padx=10, pady=(0, 10))
+        
+        # File upload button
+        upload_btn = ctk.CTkButton(
+            send_frame,
+            text="📎 File",
+            width=80,
+            height=32,
+            font=("Segoe UI", 10),
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=self._upload_chat_image
+        )
+        upload_btn.pack(side="right", padx=5)
         
         send_btn = ctk.CTkButton(
             send_frame,
@@ -6495,22 +6515,233 @@ Please clarify this for me in a way that helps me truly understand."""
         
         return "\n".join(instructions)
     
+    def _upload_chat_image(self):
+        """Open file dialog to select file(s) to attach"""
+        filetypes = [
+            ("Image files", "*.png *.jpg *.jpeg *.gif *.webp *.bmp"),
+            ("Text files", "*.txt *.md *.json *.csv *.xml *.yaml *.yml"),
+            ("Code files", "*.py *.js *.ts *.html *.css *.java *.cpp *.c *.h"),
+            ("Documents", "*.pdf *.doc *.docx"),
+            ("All files", "*.*")
+        ]
+        
+        files = filedialog.askopenfilenames(
+            title="Select File(s)",
+            filetypes=filetypes,
+            parent=self._chat_window
+        )
+        
+        if not files:
+            return
+        
+        # Define which extensions are images vs text
+        image_extensions = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"}
+        text_extensions = {".txt", ".md", ".json", ".csv", ".xml", ".yaml", ".yml", 
+                          ".py", ".js", ".ts", ".html", ".css", ".java", ".cpp", ".c", ".h"}
+        
+        for filepath in files:
+            try:
+                ext = os.path.splitext(filepath)[1].lower()
+                filename = os.path.basename(filepath)
+                
+                if ext in image_extensions:
+                    # Handle as image - base64 encode
+                    with open(filepath, "rb") as f:
+                        image_data = f.read()
+                    
+                    mime_types = {
+                        ".png": "image/png",
+                        ".jpg": "image/jpeg",
+                        ".jpeg": "image/jpeg",
+                        ".gif": "image/gif",
+                        ".webp": "image/webp",
+                        ".bmp": "image/bmp"
+                    }
+                    mime_type = mime_types.get(ext, "image/png")
+                    base64_data = base64.b64encode(image_data).decode('utf-8')
+                    
+                    # Create thumbnail for preview using PIL
+                    img = Image.open(filepath)
+                    img.thumbnail((60, 60), Image.Resampling.LANCZOS)
+                    
+                    self._chat_attached_images.append({
+                        "type": "image",
+                        "path": filepath,
+                        "base64": base64_data,
+                        "mime_type": mime_type,
+                        "thumbnail_pil": img,
+                        "filename": filename
+                    })
+                    debug_log("CHAT", f"Image attached: {filename}")
+                    
+                else:
+                    # Handle as text file - read content
+                    try:
+                        with open(filepath, "r", encoding="utf-8") as f:
+                            text_content = f.read()
+                    except UnicodeDecodeError:
+                        with open(filepath, "r", encoding="latin-1") as f:
+                            text_content = f.read()
+                    
+                    # Truncate very large files
+                    if len(text_content) > 50000:
+                        text_content = text_content[:50000] + "\n\n[... truncated ...]"
+                    
+                    self._chat_attached_images.append({
+                        "type": "text",
+                        "path": filepath,
+                        "content": text_content,
+                        "filename": filename,
+                        "ext": ext
+                    })
+                    debug_log("CHAT", f"Text file attached: {filename}")
+                
+            except Exception as e:
+                debug_log("CHAT_ERROR", f"Failed to load file: {filepath}", {"error": str(e)})
+        
+        # Update preview display
+        self._update_image_preview()
+    
+    def _update_image_preview(self):
+        """Update the file preview frame with attached files"""
+        # Clear existing previews
+        for widget in self._chat_image_preview_frame.winfo_children():
+            widget.destroy()
+        
+        if not self._chat_attached_images:
+            # Hide the preview frame
+            self._chat_image_preview_frame.pack_forget()
+            return
+        
+        # Show the preview frame
+        self._chat_image_preview_frame.pack(fill="x", padx=10, pady=(0, 5), before=self._chat_image_preview_frame.master.winfo_children()[-1])
+        
+        # Add label
+        label = ctk.CTkLabel(
+            self._chat_image_preview_frame,
+            text=f"📎 {len(self._chat_attached_images)} file(s) attached:",
+            font=("Segoe UI", 9),
+            text_color="#888888"
+        )
+        label.pack(side="left", padx=(10, 5), pady=5)
+        
+        # Add file previews with remove buttons
+        from PIL import ImageTk
+        self._chat_image_refs = []  # Keep references to prevent garbage collection
+        
+        for i, file_info in enumerate(self._chat_attached_images):
+            thumb_frame = ctk.CTkFrame(self._chat_image_preview_frame, fg_color="#2a2a2a", corner_radius=5)
+            thumb_frame.pack(side="left", padx=3, pady=5)
+            
+            if file_info.get("type") == "image":
+                # Show image thumbnail
+                ctk_img = ctk.CTkImage(light_image=file_info["thumbnail_pil"], dark_image=file_info["thumbnail_pil"], size=(50, 50))
+                self._chat_image_refs.append(ctk_img)
+                img_label = ctk.CTkLabel(thumb_frame, image=ctk_img, text="")
+                img_label.pack(side="left", padx=5, pady=5)
+            else:
+                # Show file icon for text files
+                icon_text = "📄"
+                ext = file_info.get("ext", "")
+                if ext in [".py", ".js", ".ts", ".java", ".cpp", ".c", ".h"]:
+                    icon_text = "💻"
+                elif ext in [".json", ".xml", ".yaml", ".yml"]:
+                    icon_text = "📋"
+                elif ext == ".md":
+                    icon_text = "📝"
+                    
+                icon_label = ctk.CTkLabel(
+                    thumb_frame,
+                    text=icon_text,
+                    font=("Segoe UI Emoji", 24),
+                    text_color="#888888"
+                )
+                icon_label.pack(side="left", padx=10, pady=5)
+            
+            # Filename label (truncated)
+            fname = file_info["filename"]
+            if len(fname) > 12:
+                fname = fname[:9] + "..."
+            name_label = ctk.CTkLabel(
+                thumb_frame,
+                text=fname,
+                font=("Segoe UI", 8),
+                text_color="#aaaaaa"
+            )
+            name_label.pack(side="left", padx=(0, 5))
+            
+            # Remove button
+            remove_btn = ctk.CTkButton(
+                thumb_frame,
+                text="✕",
+                width=20,
+                height=20,
+                font=("Segoe UI", 10),
+                fg_color="#5a3a3a",
+                hover_color="#7a4a4a",
+                command=lambda idx=i: self._remove_chat_image(idx)
+            )
+            remove_btn.pack(side="left", padx=(0, 5), pady=5)
+        
+        # Clear all button
+        clear_btn = ctk.CTkButton(
+            self._chat_image_preview_frame,
+            text="Clear All",
+            width=60,
+            height=24,
+            font=("Segoe UI", 9),
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=self._clear_chat_images
+        )
+        clear_btn.pack(side="right", padx=10, pady=5)
+    
+    def _remove_chat_image(self, index: int):
+        """Remove a specific image from the attached list"""
+        if 0 <= index < len(self._chat_attached_images):
+            removed = self._chat_attached_images.pop(index)
+            debug_log("CHAT", f"Image removed: {removed['filename']}")
+            self._update_image_preview()
+    
+    def _clear_chat_images(self):
+        """Clear all attached images"""
+        self._chat_attached_images = []
+        self._update_image_preview()
+        debug_log("CHAT", "All images cleared")
+
     def _send_chat_message(self):
         """Send the current message to GPT"""
         message = self._chat_input.get("1.0", "end-1c").strip()
-        if not message:
+        if not message and not self._chat_attached_images:
             return
         
-        debug_log("CHAT", f"Sending message", {"length": len(message)})
+        # Capture attached files before clearing
+        attached_files = list(self._chat_attached_images)
+        file_count = len(attached_files)
+        image_count = sum(1 for f in attached_files if f.get("type") == "image")
+        text_count = file_count - image_count
         
-        # Clear input
+        debug_log("CHAT", f"Sending message", {"length": len(message), "files": file_count, "images": image_count, "text_files": text_count})
+        
+        # Clear input and files
         self._chat_input.delete("1.0", "end")
+        self._clear_chat_images()
         
-        # Add user message to history
+        # Add user message to history (with file indicator)
         timestamp = datetime.now().strftime("%H:%M")
+        display_content = message
+        if file_count > 0:
+            file_indicators = []
+            if image_count > 0:
+                file_indicators.append(f"📷 {image_count} image(s)")
+            if text_count > 0:
+                file_indicators.append(f"📄 {text_count} file(s)")
+            indicator = "[" + ", ".join(file_indicators) + "]"
+            display_content = f"{indicator}\n{message}" if message else indicator
+        
         user_msg = {
             "role": "user",
-            "content": message,
+            "content": display_content,
             "timestamp": timestamp
         }
         self._chat_messages.append(user_msg)
@@ -6540,7 +6771,7 @@ Please clarify this for me in a way that helps me truly understand."""
         # Call API in background
         def call_api():
             try:
-                response = self._call_chat_api(message)
+                response = self._call_chat_api(message, attached_files)
                 self._chat_window.after(0, lambda: self._handle_chat_response(response, thinking_frame))
             except Exception as e:
                 self._chat_window.after(0, lambda: self._handle_chat_error(str(e), thinking_frame))
@@ -6548,8 +6779,8 @@ Please clarify this for me in a way that helps me truly understand."""
         thread = threading.Thread(target=call_api, daemon=True)
         thread.start()
     
-    def _call_chat_api(self, user_message: str) -> dict:
-        """Call the OpenAI API with chat history and context"""
+    def _call_chat_api(self, user_message: str, files: list = None) -> dict:
+        """Call the OpenAI API with chat history, context, and optional files (images or text)"""
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key or api_key == "your_openai_api_key_here":
             return {"error": "API key not configured"}
@@ -6573,10 +6804,52 @@ Please clarify this for me in a way that helps me truly understand."""
         for msg in self._chat_messages[:-1]:  # Exclude the just-added user message
             messages.append({"role": msg["role"], "content": msg["content"]})
         
-        # Add current message
-        messages.append({"role": "user", "content": user_message})
-        
-        debug_log("CHAT_API", f"Calling API with {len(messages)} messages")
+        # Add current message - format with files if present
+        if files:
+            # Separate images and text files
+            images = [f for f in files if f.get("type") == "image"]
+            text_files = [f for f in files if f.get("type") == "text"]
+            
+            # Build message content
+            message_text = user_message or ""
+            
+            # Append text file contents to message
+            if text_files:
+                file_content_parts = []
+                for tf in text_files:
+                    file_content_parts.append(f"--- FILE: {tf['filename']} ---\n{tf['content']}\n--- END FILE ---")
+                message_text = message_text + "\n\n" + "\n\n".join(file_content_parts) if message_text else "\n\n".join(file_content_parts)
+            
+            if images:
+                # Build multimodal content array for vision (images)
+                content_parts = []
+                
+                # Add text if present
+                if message_text:
+                    content_parts.append({
+                        "type": "text",
+                        "text": message_text
+                    })
+                
+                # Add images
+                for img_info in images:
+                    content_parts.append({
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{img_info['mime_type']};base64,{img_info['base64']}",
+                            "detail": "auto"
+                        }
+                    })
+                
+                messages.append({"role": "user", "content": content_parts})
+                debug_log("CHAT_API", f"Calling API with {len(messages)} messages, {len(images)} images, {len(text_files)} text files")
+            else:
+                # Text files only - no vision needed
+                messages.append({"role": "user", "content": message_text})
+                debug_log("CHAT_API", f"Calling API with {len(messages)} messages and {len(text_files)} text files")
+        else:
+            messages.append({"role": "user", "content": user_message})
+            debug_log("CHAT_API", f"Calling API with {len(messages)} messages")
         
         try:
             client = OpenAI(api_key=api_key)
