@@ -1165,7 +1165,7 @@ RULES:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=max_tokens,
+            max_completion_tokens=max_tokens,
             temperature=0.3
         )
         
@@ -1298,7 +1298,7 @@ OUTPUT ONLY THE SHORTENED VERSION. No explanations or preamble."""
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_tokens=max(500, int(len(text.split()) * target_ratio * 2)),  # Allow some buffer
+            max_completion_tokens=max(500, int(len(text.split()) * target_ratio * 2)),  # Allow some buffer
             temperature=0.3
         )
         
@@ -1379,7 +1379,7 @@ RULES:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"The user does not understand the following text. Please explain it in three progressively simpler ways:\n\n{text}"}
             ],
-            max_tokens=1500,
+            max_completion_tokens=1500,
             temperature=0.5
         )
         
@@ -1514,7 +1514,7 @@ CRITICAL FOR EXAM PREP:
                     "content": f"Create a learning-optimized summary:\n\n{text}"
                 }
             ],
-            max_tokens=1000,
+            max_completion_tokens=1000,
             temperature=0.3
         )
         
@@ -3422,6 +3422,17 @@ Space / Enter       Close and hide window
         tk_text.tag_configure("code", font=("Consolas", 13), background="#3a3a3a")
         
         content = tk_text.get("1.0", "end-1c")
+
+        # Process markdown headings (#, ##, ###...)
+        lines = content.split("\n")
+        for line_num, line in enumerate(lines, start=1):
+            heading_match = re.match(r'^\s*#{1,6}\s+(.+)$', line)
+            if heading_match:
+                heading_text = heading_match.group(1).strip()
+                start_idx = f"{line_num}.0"
+                end_idx = f"{line_num}.end"
+                tk_text.delete(start_idx, end_idx)
+                tk_text.insert(start_idx, heading_text, "heading")
         
         # Process bold italic (***text*** or ___text___)
         for match in re.finditer(r'\*\*\*(.+?)\*\*\*|___(.+?)___', content):
@@ -3663,7 +3674,7 @@ Please clarify this for me in a way that helps me truly understand."""
                         {"role": "user", "content": user_message}
                     ],
                     temperature=0.7 + (attempt * 0.1),  # Increase creativity with each attempt
-                    max_tokens=800
+                    max_completion_tokens=800
                 )
                 
                 answer = response.choices[0].message.content
@@ -6071,6 +6082,24 @@ Please clarify this for me in a way that helps me truly understand."""
             wrap="word"
         )
         self._history_text.pack(fill="x", padx=10, pady=5)
+
+        def copy_history_selected(event=None):
+            try:
+                selected = self._history_text.get("sel.first", "sel.last")
+                if selected:
+                    self._chat_window.clipboard_clear()
+                    self._chat_window.clipboard_append(selected)
+            except Exception:
+                pass
+            return "break"
+
+        self._history_text.bind("<Control-c>", copy_history_selected)
+        self._history_text.bind("<Control-C>", copy_history_selected)
+        try:
+            self._history_text._textbox.bind("<Control-c>", copy_history_selected)
+            self._history_text._textbox.bind("<Control-C>", copy_history_selected)
+        except Exception:
+            pass
         
         # Main message display area (last 20 messages)
         self._chat_display_frame = ctk.CTkScrollableFrame(
@@ -6080,7 +6109,49 @@ Please clarify this for me in a way that helps me truly understand."""
             scrollbar_button_hover_color="#4a4a4a"
         )
         self._chat_display_frame.pack(fill="both", expand=True, padx=10, pady=5)
-        
+
+        # Smart auto-scroll: stay at bottom unless user scrolls up
+        self._chat_auto_scroll = True
+        canvas = self._chat_display_frame._parent_canvas
+
+        def _on_chat_scroll(*args):
+            """Detect if user scrolled away from bottom."""
+            try:
+                _, yhi = canvas.yview()
+                self._chat_auto_scroll = (yhi >= 0.98)
+            except Exception:
+                pass
+
+        canvas.bind("<MouseWheel>", lambda e: canvas.after(50, _on_chat_scroll))
+        canvas.bind("<Configure>", lambda e: canvas.after(50, _on_chat_scroll))
+        canvas.bind("<ButtonRelease-1>", lambda e: canvas.after(50, _on_chat_scroll))
+
+        # Page Up / Page Down / Home / End keyboard navigation
+        def _chat_page_up(e=None):
+            canvas.yview_scroll(-8, "units")
+            self._chat_auto_scroll = False
+            return "break"
+
+        def _chat_page_down(e=None):
+            canvas.yview_scroll(8, "units")
+            canvas.after(50, _on_chat_scroll)
+            return "break"
+
+        def _chat_home(e=None):
+            canvas.yview_moveto(0.0)
+            self._chat_auto_scroll = False
+            return "break"
+
+        def _chat_end(e=None):
+            canvas.yview_moveto(1.0)
+            self._chat_auto_scroll = True
+            return "break"
+
+        self._chat_window.bind("<Prior>", _chat_page_up)
+        self._chat_window.bind("<Next>", _chat_page_down)
+        self._chat_window.bind("<Home>", _chat_home)
+        self._chat_window.bind("<End>", _chat_end)
+
         # Render existing messages
         self._render_chat_messages()
         
@@ -6140,6 +6211,23 @@ Please clarify this for me in a way that helps me truly understand."""
         )
         btn_code.pack(side="left", padx=3, pady=8)
         self._chat_mod_buttons["code"] = btn_code
+
+        # Yes/No questions mode
+        btn_yesno = ctk.CTkButton(
+            modifier_frame,
+            text="❓ Y/N Qs",
+            width=80,
+            height=26,
+            font=("Segoe UI", 10),
+            fg_color="#4a4a4a",
+            hover_color="#5a5a5a",
+            command=lambda: self._toggle_chat_modifier("yesno")
+        )
+        btn_yesno.pack(side="left", padx=3, pady=8)
+        self._chat_mod_buttons["yesno"] = btn_yesno
+
+        # Track pending yes/no interactions
+        self._yesno_pending = None  # Will hold {"questions": [...], "answers": {...}}
         
         # Input area
         input_frame = ctk.CTkFrame(self._chat_window, fg_color="#2a2a2a")
@@ -6400,6 +6488,16 @@ Please clarify this for me in a way that helps me truly understand."""
             self._history_text.insert("end", "(No older messages)")
         
         self._history_text.configure(state="disabled")
+
+    def _chat_scroll_to_bottom(self):
+        """Scroll chat to bottom if auto-scroll is enabled."""
+        if getattr(self, '_chat_auto_scroll', True):
+            try:
+                canvas = self._chat_display_frame._parent_canvas
+                canvas.update_idletasks()
+                canvas.yview_moveto(1.0)
+            except Exception:
+                pass
     
     def _render_chat_messages(self):
         """Render the last 20 messages in the main display"""
@@ -6427,18 +6525,22 @@ Please clarify this for me in a way that helps me truly understand."""
     def _add_message_bubble(self, msg: dict):
         """Add a message bubble to the display"""
         is_user = msg["role"] == "user"
-        
-        # Message container
+
+        # Outer row frame fills the full width of the scrollable area
+        row_frame = ctk.CTkFrame(self._chat_display_frame, fg_color="transparent")
+        row_frame.pack(fill="x", pady=5, padx=5)
+
+        # Message container – pack to the appropriate side
         msg_frame = ctk.CTkFrame(
-            self._chat_display_frame,
+            row_frame,
             fg_color="#2d5a27" if is_user else "#2a2a2a",
             corner_radius=10
         )
         msg_frame.pack(
+            side="right" if is_user else "left",
             fill="x",
-            padx=(60 if is_user else 10, 10 if is_user else 60),
-            pady=5,
-            anchor="e" if is_user else "w"
+            expand=True,
+            padx=(50, 0) if is_user else (0, 50),
         )
         
         # Header with role and timestamp
@@ -6463,18 +6565,77 @@ Please clarify this for me in a way that helps me truly understand."""
             )
             time_label.pack(side="right")
         
-        # Message content
-        content_label = ctk.CTkLabel(
+        # Estimate height to show ALL text (no cap) – accounts for word-wrap
+        text = msg["content"]
+        raw_lines = text.split("\n")
+        # Conservative estimate: ~80 chars per visual line at current font/width
+        estimated_display_lines = 0
+        for line in raw_lines:
+            if len(line) == 0:
+                estimated_display_lines += 1
+            else:
+                estimated_display_lines += max(1, -(-len(line) // 80))  # ceiling div
+        content_height = max(34, estimated_display_lines * 22)
+
+        content_text = ctk.CTkTextbox(
             msg_frame,
-            text=msg["content"],
+            height=content_height,
             font=("Segoe UI", 11),
+            fg_color="transparent",
             text_color="white",
-            wraplength=650,
-            justify="left",
-            anchor="w"
+            wrap="word",
+            border_width=0
         )
-        content_label.pack(fill="x", padx=10, pady=(2, 10))
+        content_text.pack(fill="x", padx=10, pady=(2, 10))
+        content_text.insert("1.0", text)
+
+        # Hide the scrollbar – we size the widget to fit all content
+        try:
+            content_text._scrollbar.grid_remove()
+        except Exception:
+            pass
+
+        # Apply markdown formatting (headings, bold, italic, code)
+        if hasattr(self, '_apply_markdown_formatting'):
+            self._apply_markdown_formatting(content_text)
+
+        content_text.configure(state="disabled")
+
+        # After layout, auto-resize to exact display-line count so nothing is clipped
+        def _auto_resize(widget=content_text):
+            try:
+                widget.update_idletasks()
+                info = widget._textbox.count("1.0", "end", "displaylines")
+                if info:
+                    n = info[0] if isinstance(info, tuple) else info
+                    new_h = max(34, (n + 1) * 22)
+                    widget.configure(height=new_h)
+            except Exception:
+                pass
+        content_text.after(120, _auto_resize)
+
+        def copy_selected(event=None, widget=content_text):
+            try:
+                selected = widget.get("sel.first", "sel.last")
+                if selected:
+                    self._chat_window.clipboard_clear()
+                    self._chat_window.clipboard_append(selected)
+            except Exception:
+                pass
+            return "break"
+
+        content_text.bind("<Control-c>", copy_selected)
+        content_text.bind("<Control-C>", copy_selected)
+        try:
+            content_text._textbox.bind("<Control-c>", copy_selected)
+            content_text._textbox.bind("<Control-C>", copy_selected)
+        except Exception:
+            pass
         
+        # Interactive Yes/No buttons for yesno-flagged assistant messages
+        if not is_user and msg.get("_yesno") and not msg.get("_yesno_answered"):
+            self._render_yesno_buttons(msg_frame, msg)
+
         # Copy button for assistant messages
         if not is_user:
             copy_btn = ctk.CTkButton(
@@ -6499,7 +6660,118 @@ Please clarify this for me in a way that helps me truly understand."""
             # Turn on
             self._chat_quick_modifiers[modifier] = True
             self._chat_mod_buttons[modifier].configure(fg_color="#FF6B00")
-    
+
+    def _parse_yesno_questions(self, text: str) -> list:
+        """Extract numbered questions from AI response text.
+        Returns a list of (question_number_str, question_text) tuples."""
+        import re
+        questions = []
+        for m in re.finditer(r'^\s*(\d+)\s*[\.\)\]\-:]\s*(.+)', text, re.MULTILINE):
+            q_num = m.group(1)
+            q_text = m.group(2).strip()
+            # Only include lines that look like questions (end with ? or contain "?")
+            if '?' in q_text or q_text.endswith('?'):
+                questions.append((q_num, q_text))
+        return questions
+
+    def _render_yesno_buttons(self, parent_frame, msg: dict):
+        """Render interactive Yes/No buttons for each question in a yesno-flagged message."""
+        questions = self._parse_yesno_questions(msg["content"])
+        if not questions:
+            return
+
+        # Initialise answer tracking on the message dict itself
+        if "_yesno_answers" not in msg:
+            msg["_yesno_answers"] = {}
+
+        answers = msg["_yesno_answers"]  # {q_num: "Yes"/"No"}
+
+        yn_frame = ctk.CTkFrame(parent_frame, fg_color="#1e1e1e", corner_radius=8)
+        yn_frame.pack(fill="x", padx=10, pady=(0, 8))
+
+        ctk.CTkLabel(
+            yn_frame,
+            text="Answer each question:",
+            font=("Segoe UI", 10, "bold"),
+            text_color="#FF6B00"
+        ).pack(anchor="w", padx=12, pady=(8, 4))
+
+        btn_refs = {}  # q_num -> {"yes_btn":..., "no_btn":...}
+
+        for q_num, q_text in questions:
+            row = ctk.CTkFrame(yn_frame, fg_color="transparent")
+            row.pack(fill="x", padx=12, pady=2)
+
+            ctk.CTkLabel(
+                row,
+                text=f"{q_num}) {q_text}",
+                font=("Segoe UI", 10),
+                text_color="#cccccc",
+                wraplength=520,
+                justify="left",
+                anchor="w"
+            ).pack(side="left", fill="x", expand=True, padx=(0, 8))
+
+            def make_handler(qn, choice, refs):
+                def handler():
+                    answers[qn] = choice
+                    # Highlight selected, dim the other
+                    if choice == "Yes":
+                        refs[qn]["yes_btn"].configure(fg_color="#2a7d2e", text_color="white")
+                        refs[qn]["no_btn"].configure(fg_color="#4a4a4a", text_color="#888888")
+                    else:
+                        refs[qn]["no_btn"].configure(fg_color="#9d3a3a", text_color="white")
+                        refs[qn]["yes_btn"].configure(fg_color="#4a4a4a", text_color="#888888")
+                    # Check if all answered
+                    if len(answers) == len(questions):
+                        self._chat_window.after(300, lambda: self._submit_yesno_answers(msg, questions))
+                return handler
+
+            yes_btn = ctk.CTkButton(
+                row, text="Yes", width=50, height=24,
+                font=("Segoe UI", 10, "bold"),
+                fg_color="#2a7d2e" if answers.get(q_num) == "Yes" else "#4a4a4a",
+                hover_color="#3a9d3e",
+                text_color="white" if answers.get(q_num) == "Yes" else "#cccccc",
+            )
+            no_btn = ctk.CTkButton(
+                row, text="No", width=50, height=24,
+                font=("Segoe UI", 10, "bold"),
+                fg_color="#9d3a3a" if answers.get(q_num) == "No" else "#4a4a4a",
+                hover_color="#bd4a4a",
+                text_color="white" if answers.get(q_num) == "No" else "#cccccc",
+            )
+            btn_refs[q_num] = {"yes_btn": yes_btn, "no_btn": no_btn}
+            yes_btn.configure(command=make_handler(q_num, "Yes", btn_refs))
+            no_btn.configure(command=make_handler(q_num, "No", btn_refs))
+            yes_btn.pack(side="left", padx=2)
+            no_btn.pack(side="left", padx=2)
+
+    def _submit_yesno_answers(self, msg: dict, questions: list):
+        """Compile yes/no selections and send as a follow-up user message."""
+        answers = msg.get("_yesno_answers", {})
+        if not answers:
+            return
+
+        # Mark as answered so re-renders don't show buttons again
+        msg["_yesno_answered"] = True
+
+        # Build compiled text: each question with the user's answer
+        lines = []
+        for q_num, q_text in questions:
+            choice = answers.get(q_num, "—")
+            lines.append(f"{q_num}) {q_text}")
+            lines.append(f"   → {choice}")
+            lines.append("")
+
+        compiled = "Here are my answers:\n\n" + "\n".join(lines).strip()
+        compiled += "\n\nPlease review my answers and advise accordingly."
+
+        # Inject into the input box and send
+        self._chat_input.delete("1.0", "end")
+        self._chat_input.insert("1.0", compiled)
+        self._send_chat_message()
+
     def _get_modifier_instructions(self) -> str:
         """Get instructions based on active modifiers"""
         instructions = []
@@ -6512,7 +6784,17 @@ Please clarify this for me in a way that helps me truly understand."""
         
         if self._chat_quick_modifiers.get("code"):
             instructions.append("FOCUS ON CODE: Prioritize code examples and technical implementation details.")
-        
+
+        if self._chat_quick_modifiers.get("yesno"):
+            instructions.append("""RESPOND WITH YES/NO QUESTIONS ONLY. The user wants you to ask them a series of yes-or-no questions to narrow down the best answer.
+
+RULES:
+- Provide numbered questions (1), 2), 3), etc.) that can each be answered with Yes or No.
+- Each question should be on its own line, starting with the number.
+- After the questions, do NOT provide advice yet. Wait for the user's answers.
+- Keep each question clear and concise.
+- Aim for 3-7 questions unless the topic needs more.""")
+
         return "\n".join(instructions)
     
     def _upload_chat_image(self):
@@ -6750,8 +7032,9 @@ Please clarify this for me in a way that helps me truly understand."""
         self._render_chat_messages()
         self._update_history_toggle()
         
-        # Scroll to bottom
-        self._chat_display_frame._parent_canvas.yview_moveto(1.0)
+        # Scroll to bottom (new message always scrolls)
+        self._chat_auto_scroll = True
+        self._chat_scroll_to_bottom()
         
         # Show thinking indicator
         thinking_frame = ctk.CTkFrame(
@@ -6768,10 +7051,14 @@ Please clarify this for me in a way that helps me truly understand."""
         )
         thinking_label.pack(padx=15, pady=10)
         
+        # Capture whether yesno mode is active at send time
+        yesno_active = bool(self._chat_quick_modifiers.get("yesno"))
+
         # Call API in background
         def call_api():
             try:
                 response = self._call_chat_api(message, attached_files)
+                response["_yesno_mode"] = yesno_active
                 self._chat_window.after(0, lambda: self._handle_chat_response(response, thinking_frame))
             except Exception as e:
                 self._chat_window.after(0, lambda: self._handle_chat_error(str(e), thinking_frame))
@@ -6856,7 +7143,7 @@ Please clarify this for me in a way that helps me truly understand."""
             response = client.chat.completions.create(
                 model=DEFAULT_MODEL,
                 messages=messages,
-                max_tokens=2000,
+                max_completion_tokens=2000,
                 temperature=0.7
             )
             
@@ -6891,6 +7178,8 @@ Please clarify this for me in a way that helps me truly understand."""
             "content": response["answer"],
             "timestamp": timestamp
         }
+        if response.get("_yesno_mode"):
+            assistant_msg["_yesno"] = True
         self._chat_messages.append(assistant_msg)
         
         # Save history
@@ -6900,8 +7189,8 @@ Please clarify this for me in a way that helps me truly understand."""
         self._render_chat_messages()
         self._update_history_toggle()
         
-        # Scroll to bottom
-        self._chat_display_frame._parent_canvas.yview_moveto(1.0)
+        # Auto-scroll to bottom if user hasn't scrolled up
+        self._chat_scroll_to_bottom()
         
         # Update token counter
         if "tokens" in response:
@@ -7924,7 +8213,7 @@ Generate questions that test understanding, not just recall. Make them challengi
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.7,
-                max_tokens=max_tokens
+                max_completion_tokens=max_tokens
             )
             
             result = response.choices[0].message.content.strip()
@@ -9475,7 +9764,7 @@ Generate questions that test understanding, not just recall. Make them challengi
                         {"role": "user", "content": prompt}
                     ],
                     temperature=0.3,  # Lower temp for consistent analysis
-                    max_tokens=4000
+                    max_completion_tokens=4000
                 )
                 
                 latency = int((time.time() - start_time) * 1000)
